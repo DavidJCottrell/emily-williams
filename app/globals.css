@@ -18,6 +18,11 @@
 
   --container: 1440px;
   --gutter: clamp(20px, 4vw, 64px);
+
+  --brand-progress: 0;
+  --brand-translate-y: 0px;
+  --brand-scale: 1;
+  --hero-brand-opacity: 1;
 }
 
 /* =========================================================
@@ -86,6 +91,15 @@ body::before {
   font-weight: 400;
   letter-spacing: -0.01em;
   font-style: italic;
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition: opacity 0.35s var(--ease-out), transform 0.35s var(--ease-out);
+}
+.nav__brand.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 .nav__links {
   display: flex;
@@ -115,25 +129,26 @@ body::before {
 .nav__link.is-active::after { transform: scaleX(1); transform-origin: left center; }
 
 @media (max-width: 720px) {
-  .nav__links { gap: 20px; }
-  .nav__brand { display: none; }
+  .nav { padding-top: 20px; padding-bottom: 20px; }
+  .nav__links { gap: 18px; font-size: 12px; }
+  .nav__brand { font-size: 16px; }
 }
 
 /* =========================================================
-   HERO — compact, static name (marquee removed)
+   HERO — name anchors top-left and travels into nav
    ========================================================= */
 .hero {
-  min-height: 80vh;
+  min-height: clamp(360px, 48vh, 520px);
   display: flex;
-  align-items: center;
-  padding: 160px var(--gutter) 80px;
+  align-items: flex-start;
+  padding: clamp(88px, 12vh, 116px) var(--gutter) clamp(28px, 5vh, 56px);
   position: relative;
 }
 .hero__inner {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: clamp(40px, 7vh, 88px);
+  gap: 0;
 }
 
 .hero__eyebrow {
@@ -157,12 +172,22 @@ body::before {
 }
 
 .hero__name {
+  position: fixed;
+  top: clamp(88px, 12vh, 116px);
+  left: var(--gutter);
+  z-index: 101;
+  max-width: calc(100vw - (var(--gutter) * 2));
+  pointer-events: none;
   font-family: var(--serif);
   font-weight: 350;
   font-size: clamp(56px, 11vw, 168px);
   line-height: 0.92;
   letter-spacing: -0.035em;
   font-variation-settings: "opsz" 144, "SOFT" 30;
+  transform-origin: left top;
+  transform: translate3d(0, var(--brand-translate-y), 0) scale(var(--brand-scale));
+  opacity: var(--hero-brand-opacity);
+  will-change: transform, opacity;
 }
 .hero__name em {
   font-style: italic;
@@ -184,7 +209,8 @@ body::before {
 .hero__meta-sep { opacity: 0.4; }
 
 @media (max-width: 720px) {
-  .hero { padding-top: 132px; padding-bottom: 56px; min-height: 70vh; }
+  .hero { padding-top: 96px; padding-bottom: 40px; min-height: clamp(300px, 42vh, 420px); }
+  .hero__name { top: 96px; }
   .hero__eyebrow { flex-direction: column; align-items: flex-start; gap: 8px; }
   .hero__meta-sep { display: none; }
 }
@@ -196,7 +222,7 @@ body::before {
   padding: clamp(80px, 14vh, 180px) 0;
   position: relative;
 }
-.section--about { padding-top: clamp(40px, 6vh, 80px); }
+.section--about { padding-top: clamp(24px, 4vh, 56px); }
 
 /* =========================================================
    ABOUT
@@ -949,12 +975,10 @@ body::before {
   to   { opacity: 1; transform: translateY(0); }
 }
 .hero__eyebrow,
-.hero__name,
 .hero__meta {
   animation: fadeUp 1.2s var(--ease-out) both;
 }
 .hero__eyebrow { animation-delay: 0.1s; }
-.hero__name    { animation-delay: 0.3s; }
 .hero__meta    { animation-delay: 0.7s; }
 
 /* Reduced motion */
