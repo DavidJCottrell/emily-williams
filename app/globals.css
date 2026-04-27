@@ -135,58 +135,38 @@ body::before {
 }
 
 /* =========================================================
-   HERO — name anchors top-left and travels into nav
+   ABOUT — combined landing and about section
    ========================================================= */
-.hero {
-  min-height: clamp(360px, 48vh, 520px);
-  display: flex;
-  align-items: flex-start;
-  padding: clamp(88px, 12vh, 116px) var(--gutter) clamp(28px, 5vh, 56px);
+.about {
+  min-height: 100vh;
+  padding: clamp(88px, 12vh, 120px) 0 clamp(72px, 12vh, 140px);
   position: relative;
 }
-.hero__inner {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+.about__shell {
+  min-height: calc(100vh - clamp(160px, 24vh, 260px));
 }
-
-.hero__eyebrow {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 24px;
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  font-weight: 500;
-}
-.hero__eyebrow span:nth-child(2) {
-  font-style: italic;
-  font-family: var(--serif);
-  text-transform: none;
-  letter-spacing: 0;
-  font-size: 14px;
-  color: var(--ink-soft);
+.about__hero {
+  display: grid;
+  place-items: center;
+  min-height: clamp(720px, 92vh, 920px);
 }
 
 .hero__name {
   position: fixed;
-  top: clamp(88px, 12vh, 116px);
+  top: clamp(88px, 12vh, 120px);
   left: var(--gutter);
   z-index: 101;
   max-width: calc(100vw - (var(--gutter) * 2));
   pointer-events: none;
   font-family: var(--serif);
   font-weight: 350;
-  font-size: clamp(56px, 11vw, 168px);
-  line-height: 0.92;
+  font-size: clamp(44px, 8vw, 118px);
+  line-height: 0.94;
   letter-spacing: -0.035em;
   font-variation-settings: "opsz" 144, "SOFT" 30;
   transform-origin: left top;
-  transform: translate3d(0, var(--brand-translate-y), 0) scale(var(--brand-scale));
-  opacity: var(--hero-brand-opacity);
+  transform: translate3d(0, var(--brand-translate-y, 0px), 0) scale(var(--brand-scale, 1));
+  opacity: var(--hero-brand-opacity, 1);
   will-change: transform, opacity;
 }
 .hero__name em {
@@ -196,23 +176,87 @@ body::before {
   font-variation-settings: "opsz" 144, "SOFT" 100;
 }
 
-.hero__meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 12px;
-  font-size: 13px;
-  letter-spacing: 0.04em;
-  color: var(--ink-soft);
+.about__intro {
+  width: min(100%, 1080px);
+  justify-self: center;
+  align-self: center;
+  padding-top: clamp(180px, 24vh, 260px);
 }
-.hero__meta strong { color: var(--ink); font-weight: 500; }
-.hero__meta-sep { opacity: 0.4; }
+.about__body {
+  display: grid;
+  grid-template-columns: clamp(280px, 25vw, 420px) minmax(0, 560px);
+  gap: clamp(48px, 6vw, 88px);
+  align-items: start;
+  justify-content: center;
+}
+.about__text {
+  min-width: 0;
+}
+.about__title {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(36px, 4.4vw, 72px);
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  max-width: 10.5em;
+  margin-bottom: clamp(24px, 3vh, 36px);
+}
+.about__title em { font-style: italic; color: var(--accent); }
+.about__photo {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 2px;
+  display: block;
+  filter: saturate(0.95) contrast(1.02);
+}
+.about__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2em;
+  color: var(--ink);
+}
+.about__copy p {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(16px, 1.05vw, 19px);
+  line-height: 1.62;
+  letter-spacing: -0.005em;
+}
+.about__copy em { font-style: italic; color: var(--accent); }
+
+@media (max-width: 980px) {
+  .about__hero {
+    min-height: auto;
+    padding-top: clamp(160px, 24vh, 220px);
+  }
+  .about__intro {
+    width: min(100%, 860px);
+    padding-top: clamp(120px, 18vh, 180px);
+  }
+  .about__body {
+    grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+    gap: clamp(32px, 5vw, 56px);
+  }
+}
 
 @media (max-width: 720px) {
-  .hero { padding-top: 96px; padding-bottom: 40px; min-height: clamp(300px, 42vh, 420px); }
-  .hero__name { top: 96px; }
-  .hero__eyebrow { flex-direction: column; align-items: flex-start; gap: 8px; }
-  .hero__meta-sep { display: none; }
+  .about { padding-top: 96px; }
+  .hero__name { top: 96px; font-size: clamp(42px, 14vw, 72px); }
+  .about__hero {
+    min-height: auto;
+    padding-top: clamp(116px, 20vh, 160px);
+  }
+  .about__intro {
+    max-width: 520px;
+    padding-top: clamp(96px, 16vh, 140px);
+  }
+  .about__body {
+    grid-template-columns: 1fr;
+  }
+  .about__photo {
+    width: min(100%, 340px);
+  }
 }
 
 /* =========================================================
@@ -222,80 +266,6 @@ body::before {
   padding: clamp(80px, 14vh, 180px) 0;
   position: relative;
 }
-.section--about { padding-top: clamp(24px, 4vh, 56px); }
-
-/* =========================================================
-   ABOUT
-   ========================================================= */
-.about__lede {
-  font-family: var(--serif);
-  font-weight: 400;
-  font-size: clamp(20px, 1.7vw, 26px);
-  line-height: 1.5;
-  letter-spacing: -0.005em;
-  max-width: 720px;
-  color: var(--ink);
-  padding-bottom: clamp(48px, 8vh, 96px);
-  border-bottom: 1px solid var(--rule);
-  margin-bottom: clamp(48px, 8vh, 96px);
-}
-.about__lede em { font-style: italic; color: var(--accent); }
-
-.about__grid {
-  display: grid;
-  grid-template-columns: 1fr 1.6fr;
-  gap: clamp(48px, 6vw, 96px);
-  align-items: start;
-}
-
-.about__media {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.about__photo {
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  object-fit: cover;
-  border-radius: 2px;
-  display: block;
-  filter: saturate(0.95) contrast(1.02);
-}
-
-.about__text {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(28px, 3.5vw, 44px);
-  padding-top: 8px;
-}
-
-.about__title {
-  font-family: var(--serif);
-  font-weight: 400;
-  font-size: clamp(28px, 3vw, 48px);
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  max-width: 14ch;
-}
-.about__title em { font-style: italic; color: var(--accent); }
-
-.about__copy {
-  font-family: var(--serif);
-  font-weight: 400;
-  font-size: clamp(18px, 1.3vw, 22px);
-  line-height: 1.6;
-  letter-spacing: -0.005em;
-  max-width: 60ch;
-  color: var(--ink);
-}
-.about__copy p + p { margin-top: 1.1em; }
-.about__copy em { font-style: italic; color: var(--accent); }
-
-@media (max-width: 720px) {
-  .about__grid { grid-template-columns: 1fr; gap: 40px; }
-  .about__media { max-width: 280px; }
-}
-
 /* =========================================================
    WORK — three category groups, 3-col tile grids
    ========================================================= */

@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const navItems = [
-    { id: "top", label: "Home" },
     { id: "about", label: "About" },
     { id: "work", label: "Work" },
     { id: "contact", label: "Contact" },
@@ -14,7 +13,7 @@ const navItems = [
 export function Nav() {
     const pathname = usePathname();
     const isHome = pathname === "/";
-    const [activeSection, setActiveSection] = useState("top");
+    const [activeSection, setActiveSection] = useState("about");
     const [isBrandVisible, setIsBrandVisible] = useState(!isHome);
 
     useEffect(() => {
@@ -112,7 +111,7 @@ export function Nav() {
     }, [isHome]);
 
     const hrefFor = (id: string) => {
-        if (id === "top") return isHome ? "#top" : "/";
+        if (id === "about") return isHome ? "#about" : "/";
         return isHome ? `#${id}` : `/#${id}`;
     };
 
