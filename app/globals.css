@@ -138,17 +138,33 @@ body::before {
    ABOUT — combined landing and about section
    ========================================================= */
 .about {
-  min-height: 100vh;
-  padding: clamp(88px, 12vh, 120px) 0 clamp(72px, 12vh, 140px);
+  min-height: 100svh;
+  padding: clamp(88px, 12vh, 120px) 0 clamp(80px, 12vh, 148px);
   position: relative;
+  overflow: clip;
+  isolation: isolate;
+}
+.about::after {
+  content: "";
+  position: absolute;
+  inset: 18% max(var(--gutter), 24px) auto auto;
+  width: min(420px, 42vw);
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-soft) 16%, transparent);
+  filter: blur(70px);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: -1;
 }
 .about__shell {
-  min-height: calc(100vh - clamp(160px, 24vh, 260px));
+  min-height: calc(100svh - clamp(160px, 24vh, 260px));
+  display: grid;
 }
 .about__hero {
   display: grid;
   place-items: center;
-  min-height: clamp(720px, 92vh, 920px);
+  min-height: clamp(700px, 92svh, 920px);
 }
 
 .hero__name {
@@ -156,13 +172,14 @@ body::before {
   top: clamp(88px, 12vh, 120px);
   left: var(--gutter);
   z-index: 101;
-  max-width: calc(100vw - (var(--gutter) * 2));
+  max-width: min(11.5ch, calc(100vw - (var(--gutter) * 2)));
   pointer-events: none;
   font-family: var(--serif);
   font-weight: 350;
   font-size: clamp(44px, 8vw, 118px);
   line-height: 0.94;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
   font-variation-settings: "opsz" 144, "SOFT" 30;
   transform-origin: left top;
   transform: translate3d(0, var(--brand-translate-y, 0px), 0) scale(var(--brand-scale, 1));
@@ -177,86 +194,160 @@ body::before {
 }
 
 .about__intro {
-  width: min(100%, 1080px);
+  width: min(100%, 1120px);
   justify-self: center;
   align-self: center;
-  padding-top: clamp(180px, 24vh, 260px);
+  padding-top: clamp(96px, 14vh, 160px);
 }
 .about__body {
   display: grid;
-  grid-template-columns: clamp(280px, 25vw, 420px) minmax(0, 560px);
-  gap: clamp(48px, 6vw, 88px);
-  align-items: start;
+  grid-template-columns: minmax(260px, 0.86fr) minmax(0, 1.14fr);
+  gap: clamp(36px, 6vw, 88px);
+  align-items: center;
   justify-content: center;
+  padding-block: clamp(28px, 5vh, 56px);
 }
 .about__text {
   min-width: 0;
+  max-width: 640px;
 }
 .about__title {
   font-family: var(--serif);
   font-weight: 400;
-  font-size: clamp(36px, 4.4vw, 72px);
-  line-height: 1.06;
-  letter-spacing: -0.025em;
-  max-width: 10.5em;
+  font-size: clamp(34px, 4.2vw, 72px);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  max-width: 10.75em;
   margin-bottom: clamp(24px, 3vh, 36px);
 }
 .about__title em { font-style: italic; color: var(--accent); }
 .about__photo {
-  width: 100%;
+  width: min(100%, 420px);
   aspect-ratio: 4 / 5;
   object-fit: cover;
-  border-radius: 2px;
+  border-radius: 0;
   display: block;
   filter: saturate(0.95) contrast(1.02);
+  box-shadow: 0 24px 70px rgba(22, 20, 15, 0.13);
+  justify-self: end;
 }
 .about__copy {
   display: flex;
   flex-direction: column;
-  gap: 1.2em;
+  gap: 1.05em;
   color: var(--ink);
+  max-width: 58ch;
 }
 .about__copy p {
   font-family: var(--serif);
   font-weight: 400;
-  font-size: clamp(16px, 1.05vw, 19px);
-  line-height: 1.62;
+  font-size: clamp(16px, 1.08vw, 19px);
+  line-height: 1.66;
   letter-spacing: -0.005em;
+}
+.about__copy p:first-child {
+  font-size: clamp(18px, 1.35vw, 23px);
+  line-height: 1.48;
+  letter-spacing: -0.012em;
 }
 .about__copy em { font-style: italic; color: var(--accent); }
 
 @media (max-width: 980px) {
   .about__hero {
     min-height: auto;
-    padding-top: clamp(160px, 24vh, 220px);
+    padding-top: clamp(148px, 22vh, 212px);
   }
   .about__intro {
     width: min(100%, 860px);
-    padding-top: clamp(120px, 18vh, 180px);
+    padding-top: clamp(48px, 8vh, 96px);
   }
   .about__body {
     grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
-    gap: clamp(32px, 5vw, 56px);
+    gap: clamp(28px, 5vw, 52px);
   }
 }
 
 @media (max-width: 720px) {
-  .about { padding-top: 96px; }
-  .hero__name { top: 96px; font-size: clamp(42px, 14vw, 72px); }
+  .about {
+    min-height: auto;
+    padding-top: 88px;
+    padding-bottom: clamp(64px, 14vh, 104px);
+  }
+  .about::after {
+    inset: 8% -28% auto auto;
+    width: 78vw;
+    opacity: 0.38;
+    filter: blur(54px);
+  }
+  .hero__name {
+    position: absolute;
+    top: 92px;
+    font-size: clamp(46px, 15vw, 74px);
+    max-width: 8.8ch;
+    line-height: 0.9;
+    transform: none;
+    opacity: 1;
+  }
   .about__hero {
     min-height: auto;
-    padding-top: clamp(116px, 20vh, 160px);
+    padding-top: clamp(96px, 22vh, 140px);
   }
   .about__intro {
-    max-width: 520px;
-    padding-top: clamp(96px, 16vh, 140px);
+    max-width: 560px;
+    padding-top: 0;
   }
   .about__body {
     grid-template-columns: 1fr;
+    gap: 28px;
+    padding-block: 0;
+    border-block: 0;
+  }
+  .about__text {
+    display: contents;
+  }
+  .about__title {
+    order: 1;
+    font-size: clamp(34px, 10.6vw, 54px);
+    line-height: 0.98;
+    margin-bottom: 0;
+    max-width: 9.5em;
   }
   .about__photo {
-    width: min(100%, 340px);
+    order: 2;
+    width: min(100%, 390px);
+    justify-self: stretch;
+    aspect-ratio: 5 / 6;
+    border-radius: 0;
   }
+  .about__copy {
+    order: 3;
+    max-width: none;
+    gap: 0;
+    padding: 22px;
+    border-radius: 0;
+    background: color-mix(in srgb, var(--bg-soft) 42%, transparent);
+    backdrop-filter: blur(10px);
+  }
+  .about__copy p {
+    font-size: 16.5px;
+    line-height: 1.62;
+  }
+  .about__copy p:first-child {
+    font-size: 18px;
+    line-height: 1.5;
+  }
+  .about__copy p + p {
+    margin-top: 1em;
+  }
+}
+
+@media (max-width: 420px) {
+  .about { padding-top: 78px; }
+  .hero__name { top: 84px; font-size: clamp(42px, 15vw, 62px); }
+  .about__hero { padding-top: 108px; }
+  .about__title { font-size: clamp(32px, 11vw, 46px); }
+  .about__copy { padding: 18px; border-radius: 0; }
 }
 
 /* =========================================================

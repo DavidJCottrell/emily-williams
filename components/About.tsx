@@ -16,7 +16,9 @@ export function About() {
                 src="/assets/profile-picture.jpg"
                 alt="Emily Williams"
                 className="about__photo"
-                loading="lazy"
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
               />
 
               <div className="about__text">
