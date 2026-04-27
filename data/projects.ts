@@ -47,6 +47,8 @@ export const projects: Project[] = [
     title: "Brand Refresh & Guidelines",
     category: "brand",
     client: "Hooper Quinn",
+    image: "/assets/hooper-quinn-logo.png",
+    gallery: ["/assets/hooper-quinn-logo.png"],
     year: "2025",
     role: "Brand strategy, copywriting, design",
     summary:
