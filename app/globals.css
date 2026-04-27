@@ -223,7 +223,7 @@ body::before {
 }
 .about__title em { font-style: italic; color: var(--accent); }
 .about__photo {
-  width: min(100%, 420px);
+  width: min(100%, 340px);
   aspect-ratio: 4 / 5;
   object-fit: cover;
   border-radius: 0;
@@ -263,7 +263,7 @@ body::before {
     padding-top: clamp(48px, 8vh, 96px);
   }
   .about__body {
-    grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+    grid-template-columns: minmax(220px, 340px) minmax(0, 1fr);
     gap: clamp(28px, 5vw, 52px);
   }
 }
@@ -281,13 +281,16 @@ body::before {
     filter: blur(54px);
   }
   .hero__name {
-    position: absolute;
+    position: fixed;
     top: 92px;
     font-size: clamp(46px, 15vw, 74px);
     max-width: 8.8ch;
     line-height: 0.9;
-    transform: none;
-    opacity: 1;
+
+    transform-origin: left top;
+    transform: translate3d(0, var(--brand-translate-y, 0px), 0)
+    scale(var(--brand-scale, 1));
+    opacity: var(--hero-brand-opacity, 1);
   }
   .about__hero {
     min-height: auto;
@@ -315,8 +318,8 @@ body::before {
   }
   .about__photo {
     order: 2;
-    width: min(100%, 390px);
-    justify-self: stretch;
+    width: min(100%, 340px);
+    justify-self: start;
     aspect-ratio: 5 / 6;
     border-radius: 0;
   }
@@ -344,7 +347,10 @@ body::before {
 
 @media (max-width: 420px) {
   .about { padding-top: 78px; }
-  .hero__name { top: 84px; font-size: clamp(42px, 15vw, 62px); }
+  .hero__name {
+    top: 84px;
+    font-size: clamp(42px, 15vw, 62px);
+  }
   .about__hero { padding-top: 108px; }
   .about__title { font-size: clamp(32px, 11vw, 46px); }
   .about__copy { padding: 18px; border-radius: 0; }

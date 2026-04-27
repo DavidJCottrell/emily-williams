@@ -30,19 +30,31 @@ export function Nav() {
         const updateBrandMotion = () => {
             const root = document.documentElement;
             const heroName = document.querySelector<HTMLElement>(".hero__name");
+            const navBrand = document.querySelector<HTMLElement>(".nav__brand");
+            const nav = document.querySelector<HTMLElement>(".nav");
+
             const progress = Math.min(1, Math.max(0, window.scrollY / 180));
 
             root.style.setProperty("--brand-progress", progress.toFixed(4));
 
             if (heroName) {
-                const heroTop = parseFloat(window.getComputedStyle(heroName).top || "0");
-                const heroFontSize = parseFloat(window.getComputedStyle(heroName).fontSize || "168");
-                const navFontSize = 18;
-                const targetTop = 24;
+                const heroStyles = window.getComputedStyle(heroName);
+                const heroTop = parseFloat(heroStyles.top || "0");
+                const heroFontSize = parseFloat(heroStyles.fontSize || "168");
+
+                const navFontSize = navBrand
+                    ? parseFloat(window.getComputedStyle(navBrand).fontSize || "18")
+                    : 18;
+
+                const targetTop = nav
+                    ? parseFloat(window.getComputedStyle(nav).paddingTop || "24")
+                    : 24;
+
                 const targetScale = navFontSize / heroFontSize;
                 const translateY = (targetTop - heroTop) * progress;
                 const scale = 1 + (targetScale - 1) * progress;
-                const heroOpacity = progress < 0.88 ? 1 : Math.max(0, 1 - (progress - 0.88) / 0.12);
+                const heroOpacity =
+                    progress < 0.88 ? 1 : Math.max(0, 1 - (progress - 0.88) / 0.12);
 
                 root.style.setProperty("--brand-translate-y", `${translateY}px`);
                 root.style.setProperty("--brand-scale", scale.toFixed(4));
