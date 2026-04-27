@@ -1,172 +1,309 @@
+export type ProjectCategory = "brand" | "marketing" | "culture";
+
+export type ProjectMetric = {
+  value: string;
+  label: string;
+};
+
 export type Project = {
-  id: string;
+  /** URL slug — used at /work/[slug] */
+  slug: string;
+  /** Display title of the piece of work */
   title: string;
+  /** Category used to group on the homepage */
+  category: ProjectCategory;
+  /** Client / organisation the work was for */
   client: string;
-  category: string;
-  /** How Emily was engaged on the project. Affects display in list and detail panel. */
-  engagement: "Freelance" | "In-house";
+  /** Year (or year range) the work was delivered */
   year: string;
-  image: string;
-  /** Optional gallery for the expanded view. Falls back to `image` when omitted. */
-  images?: string[];
+  /** Short role line shown on the tile + detail meta */
+  role: string;
+  /** Short summary shown beneath the tile title on the homepage */
+  summary: string;
+  /** Optional hero image for tile + detail page (placeholder shown if absent) */
+  image?: string;
+  /** Lede / opening paragraph on the detail page */
+  intro: string;
+  /** Long-form body paragraphs on the detail page */
+  body: string[];
+  /** Bullet list shown in the sidebar of the detail page */
+  scope: string[];
+  /** Optional outcome statement */
+  outcome?: string;
+  /** Optional pull-out metrics (e.g. growth numbers) */
+  metrics?: ProjectMetric[];
+  /** Optional gallery on the detail page (placeholders shown if absent) */
+  gallery?: string[];
+  /** Optional external link (live site, case study, etc.) */
   href?: string;
-  overview: string;
-  role: string[];
-  outcome: string;
 };
 
 export const projects: Project[] = [
+  /* ===========================================================
+     BRAND
+     =========================================================== */
   {
-    id: "01",
-    title: "Berylune",
-    client: "Brand & marketing strategy",
-    category: "Brand / Marketing",
-    engagement: "Freelance",
-    year: "2026",
-    image:
-        "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=900&q=80&auto=format&fit=crop",
-    overview:
-        "As Brand & Marketing Manager at Hooper Quinn, I led the development and delivery of the brand and marketing strategy to support business growth, market positioning, and team culture. The role included ownership of brand identity, tone of voice, visual guidelines, and multi-channel campaigns that balanced storytelling with lead generation.",
-    role: [
-      "Owned brand identity, tone of voice, and visual guidelines",
-      "Shaped multi-channel campaigns across brand, lead generation, and storytelling",
-      "Worked closely with BD, sales, SEO, paid media, design, and external partners",
-      "Led internal culture strategy, team-wide events, away days, and HQ office branding",
-      "Launched the Student Entrepreneur Incubator in partnership with universities",
-      "Collaborated with clients and suppliers to co-create authentic content",
-    ],
-    outcome:
-        "Strengthened brand positioning, campaign consistency, internal culture, and partnership-led content during a period of organisational growth and change.",
-  },
-  {
-    id: "02",
-    title: "Hooper Quinn",
-    client: "Brand & marketing strategy",
-    category: "Brand / Marketing",
-    engagement: "In-house",
+    slug: "brand-refresh",
+    title: "Brand Refresh & Guidelines",
+    category: "brand",
+    client: "Hooper Quinn",
     year: "2025",
-    image:
-        "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=900&q=80&auto=format&fit=crop",
-    overview:
-        "As Brand & Marketing Manager at Hooper Quinn, I led the development and delivery of the brand and marketing strategy to support business growth, market positioning, and team culture. The role included ownership of brand identity, tone of voice, visual guidelines, and multi-channel campaigns that balanced storytelling with lead generation.",
-    role: [
-      "Owned brand identity, tone of voice, and visual guidelines",
-      "Shaped multi-channel campaigns across brand, lead generation, and storytelling",
-      "Worked closely with BD, sales, SEO, paid media, design, and external partners",
-      "Led internal culture strategy, team-wide events, away days, and HQ office branding",
-      "Launched the Student Entrepreneur Incubator in partnership with universities",
-      "Collaborated with clients and suppliers to co-create authentic content",
+    role: "Brand strategy, copywriting, design",
+    summary:
+      "A full refresh of brand identity and guidelines — positioning, values, colour and typography — bringing the brand in line with a new strategic direction.",
+    intro:
+      "Hooper Quinn was outgrowing the brand it had built itself on. The work needed to evolve the firm from a traditional professional services identity into a modern, client-centric brand that could compete in a crowded market and attract entrepreneurial clients.",
+    body: [
+      "I led the refresh end-to-end — from positioning workshops with leadership through to the finished guidelines document. The aim was to give the brand a clearer point of view, a more confident voice, and a visual system the team could actually use without hand-holding.",
+      "The new identity was built around the people Hooper Quinn wanted to work with: founders, technical leads, and ambitious in-house teams. Every element — from typographic hierarchy to colour use — had to feel useful in real-world contexts: pitch decks, social, print, signage, the office itself.",
+    ],
+    scope: [
+      "Positioning, values, and messaging architecture",
+      "Visual identity refresh — colour, typography, layout system",
+      "Full brand guidelines document",
+      "Internal rollout and team training",
     ],
     outcome:
-        "Strengthened brand positioning, campaign consistency, internal culture, and partnership-led content during a period of organisational growth and change.",
+      "Brand refresh adopted across all client-facing and internal touchpoints, giving the team a single, confident reference for everything they ship.",
   },
   {
-    id: "03",
-    title: "Motorsport UK",
-    client: "Digital experience transformation",
-    category: "Digital / Content",
-    engagement: "In-house",
-    year: "2024",
-    image:
-        "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=900&q=80&auto=format&fit=crop",
-    overview:
-        "Brought on to support Motorsport UK’s ambitious Digital Experience transformation, I led the content and digital strategy for the redevelopment of its online ecosystem, including a full website rebuild and reimagined user experience.",
-    role: [
-      "Led content and digital strategy for a major website redevelopment",
-      "Managed the project through tender process and agency evaluation",
-      "Worked with internal stakeholders and external agencies on the project brief",
-      "Created a full content audit, UX recommendations, and content strategy",
-      "Developed a Tone of Voice framework and Written Style Guide",
-      "Took interim ownership of the existing website, Resource Centre, email, and social content",
+    slug: "tone-of-voice",
+    title: "Tone of Voice Framework",
+    category: "brand",
+    client: "Hooper Quinn",
+    year: "2025",
+    role: "Brand strategy, copywriting",
+    summary:
+      "A revised tone of voice framework to complement the refreshed brand identity — written so the team could pick it up and use it, not just admire it.",
+    intro:
+      "A brand refresh that doesn't reach the writing is only half done. Alongside the visual identity work, I built a tone of voice framework Hooper Quinn could use across every channel — proposals, social, web, internal comms — without sounding like a different company each time.",
+    body: [
+      "The framework defined voice principles, do-and-don't examples, and a set of writing patterns mapped to real situations the team writes for: a LinkedIn post, a project case study, a sales follow-up, an internal Slack message.",
+      "Rather than abstract adjectives, the document leans heavily on side-by-side rewrites — showing the team what 'on-brand' actually looks like at the sentence level.",
+    ],
+    scope: [
+      "Voice principles and supporting attributes",
+      "Channel-specific writing guidance",
+      "Before / after examples across real touchpoints",
+      "Embedded into the wider brand guidelines",
     ],
     outcome:
-        "Supported Board-level decision-making and ensured continuity across the digital ecosystem during a period of team and platform change.",
+      "A practical reference the team uses when writing, not a document that lives in a drawer.",
   },
   {
-    id: "04",
-    title: "Igloo Books Ltd",
-    client: "Global marketing direction",
-    category: "Marketing / Publishing",
-    engagement: "In-house",
-    year: "2023",
-    image:
-        "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=900&q=80&auto=format&fit=crop",
-    overview:
-        "As Global Marketing Manager at Igloo Books, I made immediate impact in shaping the company’s global marketing direction, developing a comprehensive project plan to create a consistent strategy across territories and align regional activity with overall brand positioning.",
-    role: [
-      "Developed a project plan for a consistent global marketing strategy",
-      "Worked closely with Sales and Publishing teams on go-to-market planning",
-      "Supported product launches with major licensing partners including Disney, Marvel, and Tom Gates",
-      "Created and supported sales presentations and licensing pitches",
-      "Took ownership of the Igloo website and initiated a rebuild project",
-    ],
-    outcome:
-        "Improved strategic clarity around global marketing activity, product launch support, and website performance before the role concluded due to redundancy.",
-  },
-  {
-    id: "05",
-    title: "Twentytwo",
-    client: "Head of digital marketing",
-    category: "Digital / Agency",
-    engagement: "In-house",
+    slug: "beanworks-art-direction",
+    title: "Beanworks Roastery",
+    category: "brand",
+    client: "Beanworks Roastery",
     year: "2021",
-    image:
-        "https://images.unsplash.com/photo-1511920170033-f8396924c348?w=900&q=80&auto=format&fit=crop",
-    overview:
-        "After being promoted to lead Twentytwo’s growing Marketing department, I managed all aspects of client delivery across organic and paid social, email marketing, PPC, and SEO, ensuring consistently high standards aligned with KPIs, brand guidelines, and data security protocols.",
-    role: [
-      "Led client delivery across social, email, PPC, SEO, content, and reporting",
-      "Oversaw project scoping, team briefing, delivery, and performance reporting",
-      "Acted as the central point of contact for marketing clients",
-      "Reviewed and produced marketing and web copy, campaign content, and press releases",
-      "Grew the team to eight, including hiring a dedicated Graphic Designer",
-      "Created departmental processes and improved project and budget tracking in Monday.com",
+    role: "Art direction, social media strategy",
+    summary:
+      "Instagram-led visual direction for a specialty roastery — building a brand-forward feed grounded in product, process and place.",
+    intro:
+      "Beanworks needed an Instagram presence that felt as considered as their coffee. The work focused on art direction and a social strategy that gave the brand a consistent, recognisable visual language.",
+    body: [
+      "I worked closely with the team on the look and feel of the feed — what to shoot, how to shoot it, and how the grid would build over time. The goal was an account that read as a single brand world, not a collection of individual posts.",
+      "Photography was professionally produced; my role was the direction and strategy that sat around it.",
+    ],
+    scope: [
+      "Visual direction for Instagram",
+      "Social media strategy and content planning",
+      "Briefing and direction of professional photography",
+    ],
+  },
+
+  /* ===========================================================
+     MARKETING
+     =========================================================== */
+  {
+    slug: "linkedin-social-strategy",
+    title: "LinkedIn Social Strategy",
+    category: "marketing",
+    client: "Hooper Quinn",
+    year: "2025",
+    role: "Social media strategy, content creation, management",
+    summary:
+      "An audience-first LinkedIn strategy for an engineering and technology partner — content that grew followers and built real engagement, not vanity metrics.",
+    intro:
+      "When I joined Hooper Quinn, LinkedIn was active but underperforming. Posts were generic, engagement was flat, and the channel wasn't doing much for the brand. I rebuilt the strategy around the people Hooper Quinn actually wanted to reach — and what those people would want to read.",
+    body: [
+      "The new approach prioritised story-led posts: behind-the-scenes from live engineering projects, founder spotlights from the Student Entrepreneur Incubator, team culture moments, and the occasional honest reflection from leadership. Less corporate, more human.",
+      "Cadence, formats and post structure were all tuned to the platform — long-form text posts where they earned their length, photo-led posts when the visual carried the story, and a consistent voice across the board.",
+    ],
+    scope: [
+      "Channel strategy, audience definition and content pillars",
+      "Editorial calendar and post planning",
+      "Copywriting, photography direction and post production",
+      "Performance reporting and iteration",
     ],
     outcome:
-        "Built a scalable marketing department, strengthened client retention, improved operational visibility, and raised delivery standards across multi-service digital projects.",
+      "Over ten months, LinkedIn became one of Hooper Quinn's strongest brand channels — measured in real conversation with the right audiences, not just impressions.",
+    metrics: [
+      { value: "+49%", label: "Follower growth (1,861 → 2,780)" },
+      { value: "+683%", label: "Engagement rate (3% → 23.5%)" },
+      { value: "10 mo", label: "Programme length" },
+    ],
   },
   {
-    id: "06",
-    title: "Twentytwo",
-    client: "Social media & service development",
-    category: "Social / Performance",
-    engagement: "In-house",
-    year: "2020",
-    image:
-        "https://images.unsplash.com/photo-1522335789203-aaa3d9532b1e?w=900&q=80&auto=format&fit=crop",
-    overview:
-        "As Twentytwo’s first dedicated marketing hire, I played a key role in establishing and growing the Marketing arm of the business, leading multi-channel social strategies for a diverse client base and helping expand the agency’s digital capabilities.",
-    role: [
-      "Developed and managed multi-channel social strategies for agency clients",
-      "Aligned campaigns with each client’s brand tone and business goals",
-      "Introduced new service offerings including paid social, PPC, and SEO",
-      "Created reporting and insight processes using Google Analytics and Google Data Studio",
-      "Wrote blog and email content tailored to different client voices and sectors",
-      "Represented the agency at local networking events to support commercial growth",
+    slug: "lead-magnet-email",
+    title: "Lead Magnet Email Campaign",
+    category: "marketing",
+    client: "Hooper Quinn",
+    year: "2025",
+    role: "Marketing strategy, copywriting, design",
+    summary:
+      "An automated email journey built around a 'prototyping guide' lead magnet — turning a useful download into a conversation with the right audience.",
+    intro:
+      "The goal: give prospects something genuinely useful, then build a relationship from there. I designed and built an email journey triggered by downloads of a Hooper Quinn prototyping guide, with content sequenced to deepen engagement rather than hurry to a pitch.",
+    body: [
+      "The campaign covered the landing page, the gated download, and the multi-step nurture journey that followed — each email written to be opened, read, and replied to rather than skimmed and binned.",
+      "Tracking was set up across the funnel so we could see what was actually working and refine quickly.",
+    ],
+    scope: [
+      "Landing page strategy and copy",
+      "Lead magnet content and design",
+      "Multi-step nurture sequence",
+      "Performance tracking and optimisation",
     ],
     outcome:
-        "Helped establish a new marketing function, broaden the agency’s service offering, and create the foundations for future team growth.",
+      "30+ qualified downloads within the first 30 days, building a warm pipeline of contacts who'd already self-identified as relevant.",
   },
   {
-    id: "07",
-    title: "Lee Abbey London",
-    client: "Social media & marketing coordination",
-    category: "Marketing / Communications",
-    engagement: "In-house",
-    year: "2019",
-    image:
-        "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=900&q=80&auto=format&fit=crop",
-    overview:
-        "As the sole marketing lead within a small, multifaceted team, I planned and delivered Lee Abbey London’s marketing and communications across social media, website, digital campaigns, print materials, events, and internal communications.",
-    role: [
-      "Managed all social media channels, including content planning, asset creation, scheduling, engagement, and insights",
-      "Created visual content in-house using photography, Canva, and Adobe Creative Cloud",
-      "Delivered marketing campaigns and events within tight budget constraints",
-      "Maintained and updated the website, writing copy for web, job ads, and digital campaigns",
-      "Contributed to the Lee Abbey Movement magazine",
-      "Supported project coordination, internal events, office operations, and Board of Trustees administration",
+    slug: "website-restructure",
+    title: "Website Restructure",
+    category: "marketing",
+    client: "Hooper Quinn",
+    year: "2025",
+    role: "Content strategy, copywriting, design",
+    summary:
+      "A full restructure of the Hooper Quinn website — new site map, new page architecture, new customer journeys reflecting a sharpened brand position.",
+    intro:
+      "The existing site was a legacy of an earlier era of the business. It described what Hooper Quinn used to be, not what they were becoming. I led a full restructure aligned to the refreshed brand and the way clients actually arrive, evaluate and engage.",
+    body: [
+      "The work began with a content audit and a rethought site map, mapping pages to specific audience needs and stages. From there I developed new wireframes for the homepage, division pages and case study templates — and wrote the copy to match.",
+      "The result is a site that does fewer things, says them more clearly, and gives the sales team a structure they can actually point clients to.",
+    ],
+    scope: [
+      "Content audit of the existing site",
+      "New site map and page architecture",
+      "Wireframes for homepage, division and case study templates",
+      "Page-level copywriting",
     ],
     outcome:
-        "Delivered consistent, audience-relevant communications across digital and print channels while supporting wider organisational operations and stakeholder engagement.",
+      "A clearer, more confident site that reflects where the business is heading — not where it's been.",
+  },
+
+  /* ===========================================================
+     CULTURE
+     =========================================================== */
+  {
+    slug: "culture-survey",
+    title: "Culture Survey & Strategy",
+    category: "culture",
+    client: "Hooper Quinn",
+    year: "2025",
+    role: "Culture strategy, survey design, analysis",
+    summary:
+      "A fully anonymised, 100%-response culture survey — and the strategies it unlocked across belonging, motivation, communication, ways of working and trust.",
+    intro:
+      "After a stretch of intense deadlines, internal pressure was showing. Rather than guess at the cause, we asked. I designed and ran a fully anonymised culture survey covering the things that quietly determine whether a team does its best work — or quietly burns out.",
+    body: [
+      "The survey was structured across five core areas: Belonging, Safety & Inclusion; Motivation, Growth & Retention; Feedback, Recognition & Communication; Ways of Working & Team Culture; and Openness, Trust & Underlying Issues.",
+      "Every employee responded. The findings were synthesised into actionable strategies for each area, with clear ownership and review cadences — moving the conversation from 'how are we feeling?' to 'here's what we're going to do about it.'",
+    ],
+    scope: [
+      "Survey design across five culture pillars",
+      "Anonymised distribution and response collection",
+      "Analysis and synthesis of findings",
+      "Action planning across all five areas",
+    ],
+    outcome:
+      "100% response rate. Findings translated into concrete action across belonging, recognition, ways of working, and trust.",
+    metrics: [
+      { value: "100%", label: "Response rate" },
+      { value: "5", label: "Culture pillars covered" },
+    ],
+  },
+  {
+    slug: "student-entrepreneur-incubator",
+    title: "Student Entrepreneur Incubator",
+    category: "culture",
+    client: "Hooper Quinn",
+    year: "2025",
+    role: "Programme design, partnerships, brand",
+    summary:
+      "A new incubator partnering Hooper Quinn with universities to support student entrepreneurs through early-stage IP and prototyping.",
+    intro:
+      "The Student Entrepreneur Incubator was a brand-defining initiative — positioning Hooper Quinn as a serious supporter of early-stage ideas, while giving university teams genuine engineering and prototyping support.",
+    body: [
+      "I worked on the programme design, the university partnerships, and the brand around the launch — including the stories that would carry the initiative on social and PR.",
+      "The launch established Hooper Quinn as a credible voice in early-stage IP, and gave the brand a steady stream of content rooted in real, optimistic work — not stock-photo abstractions.",
+    ],
+    scope: [
+      "Programme structure and partner approach",
+      "University partnership development",
+      "Launch brand, positioning and messaging",
+      "Ongoing storytelling across social and PR",
+    ],
+    outcome:
+      "A live programme generating real founder stories — and positioning HQ as thought leaders on early-stage IP.",
+  },
+  {
+    slug: "team-culture-programme",
+    title: "Team Culture Programme",
+    category: "culture",
+    client: "Hooper Quinn",
+    year: "2025",
+    role: "Culture strategy, event design, internal comms",
+    summary:
+      "A company-wide culture programme — quarterly team events, away days, an onboarding journey, and the office-as-brand work that ties them together.",
+    intro:
+      "Culture isn't built in survey reports — it's built in the everyday rhythm of a team. Alongside the survey work, I designed and ran the wider culture programme: quarterly events, away days, onboarding, and the spatial brand of the HQ office itself.",
+    body: [
+      "Each touchpoint was designed to do real work: onboarding to bed new joiners in fast, away days to reset and reconnect, quarterly events to mark progress, and an office environment that reflected the brand back to the team every day.",
+      "The programme was deliberately lightweight to run — designed to keep going without depending on any single person.",
+    ],
+    scope: [
+      "Quarterly team events programme",
+      "Away day design and facilitation",
+      "Onboarding journey for new joiners",
+      "Office-as-brand spatial and signage work",
+    ],
+    outcome:
+      "A repeatable culture rhythm that outlasts any single owner — woven into the way the team works, not bolted on top.",
   },
 ];
+
+/** Stable display order for the three category groups on the homepage. */
+export const categoryOrder: ProjectCategory[] = ["brand", "marketing", "culture"];
+
+/** Short intro lines shown above each category grid. */
+export const categoryMeta: Record<
+  ProjectCategory,
+  { label: string; intro: string }
+> = {
+  brand: {
+    label: "Brand",
+    intro:
+      "Identity, voice, and the visual systems that hold them together — the foundations everything else gets built on.",
+  },
+  marketing: {
+    label: "Marketing",
+    intro:
+      "Audience-first campaigns and channels — built to do something useful, measured against the metrics that actually matter.",
+  },
+  culture: {
+    label: "Culture",
+    intro:
+      "Strategy, programmes, and the listening behind them — the work that decides whether a team gets to do its best work.",
+  },
+};
+
+/** Small helper used by the homepage and the dynamic detail route. */
+export function getProjectsByCategory(category: ProjectCategory): Project[] {
+  return projects.filter((p) => p.category === category);
+}
+
+export function getProjectBySlug(slug: string): Project | undefined {
+  return projects.find((p) => p.slug === slug);
+}

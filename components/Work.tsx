@@ -1,130 +1,79 @@
-"use client";
-
-import { useState } from "react";
-import { projects } from "@/data/projects";
+import Link from "next/link";
+import {
+  categoryMeta,
+  categoryOrder,
+  getProjectsByCategory,
+  Project,
+  ProjectCategory,
+} from "@/data/projects";
 import { Reveal } from "./Reveal";
 
 export function Work() {
-    const [openId, setOpenId] = useState<string | null>(null);
-    const currentYear = new Date().getFullYear();
+  return (
+    <section className="section section--work" id="work">
+      <div className="shell">
+        {categoryOrder.map((category) => (
+          <CategoryGroup key={category} category={category} />
+        ))}
+      </div>
+    </section>
+  );
+}
 
-    return (
-        <section className="section" id="work">
-            <div className="shell">
-                <Reveal className="section__head">
-                    <span className="section__num">02 — Selected Work</span>
-                    <span className="section__label">2019 — {currentYear}</span>
-                </Reveal>
+function CategoryGroup({ category }: { category: ProjectCategory }) {
+  const items = getProjectsByCategory(category);
+  if (!items.length) return null;
+  const meta = categoryMeta[category];
 
-                <Reveal as="ul" stagger className="work__list">
-                    {projects.map((p) => {
-                        const isOpen = openId === p.id;
-                        const images = p.images?.length ? p.images : [p.image];
-                        const detailsId = `work-details-${p.id}`;
+  return (
+    <div className="work-group" id={`work-${category}`}>
+      <Reveal className="work-group__head">
+        <span className="work-group__label">{meta.label}</span>
+        <p className="work-group__intro">{meta.intro}</p>
+      </Reveal>
 
-                        return (
-                            <li
-                                key={p.id}
-                                className={`work__item${isOpen ? " is-open" : ""}`}
-                            >
-                                <button
-                                    type="button"
-                                    className="work__link"
-                                    aria-expanded={isOpen}
-                                    aria-controls={detailsId}
-                                    onClick={() => setOpenId(isOpen ? null : p.id)}
-                                >
-                                    <span className="work__num">— {p.id}</span>
-                                    <span className="work__title">{p.title}</span>
-                                    <span className="work__client">{p.client}</span>
-                                    <span className="work__cat">
-                    <span className="work__cat-engagement">
-                      {p.engagement}
-                    </span>
-                    <span className="work__cat-type">{p.category}</span>
-                  </span>
-                                    <span className="work__year">{p.year}</span>
-                                </button>
+      <Reveal stagger className="work-group__grid">
+        {items.map((project) => (
+          <Tile key={project.slug} project={project} />
+        ))}
+      </Reveal>
+    </div>
+  );
+}
 
-                                <div
-                                    id={detailsId}
-                                    className={`work__details${isOpen ? " is-open" : ""}`}
-                                    aria-hidden={!isOpen}
-                                >
-                                    <div className="work__details-inner">
-                                        <div className="work__details-grid">
-                                            <div className="work__details-text">
-                                                <div className="work__details-meta">
-                                                    <span>{p.engagement}</span>
-                                                    <span
-                                                        aria-hidden="true"
-                                                        className="work__details-meta-sep"
-                                                    >
-                            ·
-                          </span>
-                                                    <span>{p.year}</span>
-                                                    <span
-                                                        aria-hidden="true"
-                                                        className="work__details-meta-sep"
-                                                    >
-                            ·
-                          </span>
-                                                    <span>{p.category}</span>
-                                                </div>
+function Tile({ project }: { project: Project }) {
+  return (
+    <Link href={`/work/${project.slug}`} className="tile">
+      <div className="tile__media">
+        {project.image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={project.image}
+            alt={project.title}
+            loading="lazy"
+            className="tile__img"
+          />
+        ) : (
+          <div className="tile__placeholder" aria-hidden="true">
+            <span>{project.client}</span>
+          </div>
+        )}
+      </div>
 
-                                                <div className="work__detail-block">
-                                                    <span className="work__detail-label">Overview</span>
-                                                    <p>{p.overview}</p>
-                                                </div>
-
-                                                <div className="work__detail-block">
-                          <span className="work__detail-label">
-                            Role &amp; Scope
-                          </span>
-                                                    <ul>
-                                                        {p.role.map((r) => (
-                                                            <li key={r}>{r}</li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-
-                                                <div className="work__detail-block">
-                                                    <span className="work__detail-label">Outcome</span>
-                                                    <p>{p.outcome}</p>
-                                                </div>
-
-                                                {p.href && p.href !== "#" && (
-                                                    <a
-                                                        href={p.href}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="work__detail-link"
-                                                    >
-                                                        View live →
-                                                    </a>
-                                                )}
-                                            </div>
-
-                                            <div className="work__details-media">
-                                                {images.map((src, i) => (
-                                                    // eslint-disable-next-line @next/next/no-img-element
-                                                    <img
-                                                        key={`${p.id}-${i}`}
-                                                        src={src}
-                                                        alt={`${p.title} — image ${i + 1}`}
-                                                        loading="lazy"
-                                                        className="work__details-img"
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </li>
-                        );
-                    })}
-                </Reveal>
-            </div>
-        </section>
-    );
+      <div className="tile__body">
+        <h3 className="tile__title">{project.title}</h3>
+        <p className="tile__client">
+          <span>{project.client}</span>
+          <span className="tile__sep" aria-hidden="true">
+            ·
+          </span>
+          <span>{project.year}</span>
+        </p>
+        <p className="tile__text">{project.summary}</p>
+        <span className="tile__more">
+          See more <span aria-hidden="true">→</span>
+        </span>
+      </div>
+    </Link>
+  );
 }

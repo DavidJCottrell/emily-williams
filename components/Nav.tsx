@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const navItems = [
@@ -10,9 +12,14 @@ const navItems = [
 ];
 
 export function Nav() {
+    const pathname = usePathname();
+    const isHome = pathname === "/";
     const [activeSection, setActiveSection] = useState("top");
 
     useEffect(() => {
+        // Section-spy only runs on the home page
+        if (!isHome) return;
+
         const getSections = () =>
             navItems
                 .map((item) => document.getElementById(item.id))
@@ -61,26 +68,31 @@ export function Nav() {
             window.removeEventListener("scroll", requestUpdate);
             window.removeEventListener("resize", requestUpdate);
         };
-    }, []);
+    }, [isHome]);
+
+    const hrefFor = (id: string) => {
+        if (id === "top") return isHome ? "#top" : "/";
+        return isHome ? `#${id}` : `/#${id}`;
+    };
 
     return (
         <nav className="nav" aria-label="Primary navigation">
-            <a href="#top" className="nav__brand">
+            <Link href="/" className="nav__brand">
                 Emily Williams
-            </a>
+            </Link>
             <ul className="nav__links">
                 {navItems.map((item) => {
-                    const isActive = activeSection === item.id;
+                    const isActive = isHome && activeSection === item.id;
 
                     return (
                         <li key={item.id}>
-                            <a
+                            <Link
                                 className={`nav__link${isActive ? " is-active" : ""}`}
-                                href={`#${item.id}`}
+                                href={hrefFor(item.id)}
                                 aria-current={isActive ? "page" : undefined}
                             >
                                 {item.label}
-                            </a>
+                            </Link>
                         </li>
                     );
                 })}
