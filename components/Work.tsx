@@ -1,28 +1,43 @@
 import Link from "next/link";
+
 import {
   categoryMeta,
   categoryOrder,
-  getProjectsByCategory,
-  Project,
-  ProjectCategory,
+  type Project,
+  type ProjectCategory,
 } from "@/data/projects";
+import { getAllProjects } from "@/lib/projects-server";
 import { Reveal } from "./Reveal";
 
-export function Work() {
+export async function Work() {
+  const all = await getAllProjects();
+
   return (
     <section className="section section--work" id="work">
       <div className="shell">
-        {categoryOrder.map((category) => (
-          <CategoryGroup key={category} category={category} />
-        ))}
+        {categoryOrder.map((category) => {
+          const items = all.filter((p) => p.category === category);
+          if (items.length === 0) return null;
+          return (
+            <CategoryGroup
+              key={category}
+              category={category}
+              items={items}
+            />
+          );
+        })}
       </div>
     </section>
   );
 }
 
-function CategoryGroup({ category }: { category: ProjectCategory }) {
-  const items = getProjectsByCategory(category);
-  if (!items.length) return null;
+function CategoryGroup({
+  category,
+  items,
+}: {
+  category: ProjectCategory;
+  items: Project[];
+}) {
   const meta = categoryMeta[category];
 
   return (

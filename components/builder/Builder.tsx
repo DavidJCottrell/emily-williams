@@ -5,6 +5,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -15,12 +16,14 @@ import {
   ProjectCategory,
   ProjectMetric,
   TwoColumnChild,
-  projects as seedProjects,
 } from "@/data/projects";
 
 import "./builder.css";
 
-const STORAGE_KEY = "emilyw.builder.v1";
+const STORAGE_KEY = "emilyw.builder.v2";
+const SAVE_DEBOUNCE_MS = 800;
+
+type SaveStatus = "saving" | "saved" | "error";
 
 /* ===========================================================
    Empty / starter values
@@ -28,8 +31,8 @@ const STORAGE_KEY = "emilyw.builder.v1";
 
 function emptyProject(): Project {
   return {
-    slug: "",
-    title: "",
+    slug: "new-project",
+    title: "Untitled project",
     category: "brand",
     client: "",
     year: String(new Date().getFullYear()),
@@ -80,87 +83,197 @@ const BLOCK_TYPES: { value: ProjectBlock["type"]; label: string }[] = [
    =========================================================== */
 
 export function Builder() {
-  const [project, setProject] = useState<Project>(() => emptyProject());
-  const [hydrated, setHydrated] = useState(false);
-  const [exportMode, setExportMode] = useState<"ts" | "json">("ts");
+  const [allProjects, setAllProjects] = useState<Project[]>([]);
+  const [activeIndex, setActiveIndex] = useState<number>(-1);
+  const [loaded, setLoaded] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved");
   const [exportOpen, setExportOpen] = useState(false);
+  const [exportMode, setExportMode] = useState<"ts" | "json">("ts");
   const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
 
-  // Hydrate from localStorage once on mount
+  // Track whether the current state is from the initial fetch (don't
+  // post that back as a "change") vs. an actual user edit.
+  const dirty = useRef(false);
+
+  /* ---- Initial fetch ---- */
+
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === "object") {
-          setProject({ ...emptyProject(), ...parsed });
-        }
-      }
-    } catch {
-      /* ignore corrupt drafts */
-    }
-    setHydrated(true);
-  }, []);
-
-  // Persist on every change (after hydration)
-  useEffect(() => {
-    if (!hydrated) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(project));
-    } catch {
-      /* quota / private mode — silently ignore */
-    }
-  }, [project, hydrated]);
-
-  /* ----- field updates ----- */
-
-  const update = useCallback(<K extends keyof Project>(key: K, value: Project[K]) => {
-    setProject((p) => ({ ...p, [key]: value }));
-  }, []);
-
-  const loadFromSeed = useCallback((slug: string) => {
-    if (slug === "__new__") {
-      setProject(emptyProject());
-      return;
-    }
-    const found = seedProjects.find((p) => p.slug === slug);
-    if (!found) return;
-    // If the seed has body but no blocks, seed blocks from body so the
-    // user can start editing visually right away.
-    const blocks: ProjectBlock[] =
-      found.blocks && found.blocks.length > 0
-        ? found.blocks
-        : found.body.map((para) => ({
-            type: "richText" as const,
-            content: para,
-          }));
-    setProject({ ...found, blocks });
-  }, []);
-
-  const reset = useCallback(() => {
-    if (
-      window.confirm(
-        "Reset the builder? Your current draft will be cleared from local storage.",
-      )
-    ) {
-      setProject(emptyProject());
+    let cancelled = false;
+    (async () => {
       try {
-        localStorage.removeItem(STORAGE_KEY);
-      } catch {
-        /* ignore */
+        const res = await fetch("/api/projects", { cache: "no-store" });
+        if (res.status === 401) {
+          window.location.href =
+            "/builder/login?next=" + encodeURIComponent("/builder");
+          return;
+        }
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = (await res.json()) as { projects: Project[] };
+        if (cancelled) return;
+        setAllProjects(data.projects);
+        setActiveIndex(data.projects.length > 0 ? 0 : -1);
+      } catch (err) {
+        console.error("[builder] initial load failed:", err);
+        // Fall back to localStorage if available
+        try {
+          const cached = localStorage.getItem(STORAGE_KEY);
+          if (cached) {
+            const parsed = JSON.parse(cached) as Project[];
+            if (Array.isArray(parsed)) {
+              setAllProjects(parsed);
+              setActiveIndex(parsed.length > 0 ? 0 : -1);
+            }
+          }
+        } catch {
+          /* ignore */
+        }
+        setSaveStatus("error");
+      } finally {
+        if (!cancelled) setLoaded(true);
       }
-    }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  /* ----- export ----- */
+  /* ---- Local storage backup ---- */
+
+  useEffect(() => {
+    if (!loaded) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allProjects));
+    } catch {
+      /* quota / private mode */
+    }
+  }, [allProjects, loaded]);
+
+  /* ---- Debounced auto-save ---- */
+
+  useEffect(() => {
+    if (!loaded || !dirty.current) return;
+
+    const timer = setTimeout(async () => {
+      setSaveStatus("saving");
+      try {
+        const res = await fetch("/api/projects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ projects: allProjects }),
+        });
+        if (res.status === 401) {
+          window.location.href =
+            "/builder/login?next=" + encodeURIComponent("/builder");
+          return;
+        }
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        setSaveStatus("saved");
+        dirty.current = false;
+      } catch (err) {
+        console.error("[builder] save failed:", err);
+        setSaveStatus("error");
+      }
+    }, SAVE_DEBOUNCE_MS);
+
+    return () => clearTimeout(timer);
+  }, [allProjects, loaded]);
+
+  /* ---- Mutations: any setAllProjects call from these helpers
+          marks the state dirty so the save effect picks it up. ---- */
+
+  const mutate = useCallback(
+    (next: Project[] | ((prev: Project[]) => Project[])) => {
+      dirty.current = true;
+      setAllProjects(next);
+    },
+    [],
+  );
+
+  const updateActive = useCallback(
+    (patch: Partial<Project>) => {
+      if (activeIndex < 0) return;
+      mutate((prev) =>
+        prev.map((p, i) => (i === activeIndex ? { ...p, ...patch } : p)),
+      );
+    },
+    [activeIndex, mutate],
+  );
+
+  const update = useCallback(
+    <K extends keyof Project>(key: K, value: Project[K]) => {
+      updateActive({ [key]: value } as Partial<Project>);
+    },
+    [updateActive],
+  );
+
+  const newProject = useCallback(() => {
+    setAllProjects((prev) => {
+      const next = [...prev, emptyProject()];
+      setActiveIndex(next.length - 1);
+      dirty.current = true;
+      return next;
+    });
+  }, []);
+
+  const deleteActive = useCallback(() => {
+    if (activeIndex < 0) return;
+    if (
+      !window.confirm(
+        "Delete this project? Its content will be removed from the live site on next request.",
+      )
+    )
+      return;
+    mutate((prev) => prev.filter((_, i) => i !== activeIndex));
+    setActiveIndex(-1);
+  }, [activeIndex, mutate]);
+
+  const switchTo = useCallback((index: number) => {
+    setActiveIndex(index);
+  }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await fetch("/api/builder/logout", { method: "POST" });
+    } catch {
+      /* ignore */
+    }
+    window.location.href = "/builder/login";
+  }, []);
+
+  /* ---- Active project & preview ---- */
+
+  const active: Project | null =
+    activeIndex >= 0 && activeIndex < allProjects.length
+      ? allProjects[activeIndex]
+      : null;
+
+  const previewProject: Project | null = useMemo(() => {
+    if (!active) return null;
+    return {
+      ...active,
+      slug: active.slug || "preview",
+      title: active.title || "Untitled project",
+      client: active.client || "Client",
+      year: active.year || "—",
+      role: active.role || "Role",
+      intro: active.intro || "Intro / lede goes here.",
+      body:
+        active.body && active.body.length > 0
+          ? active.body
+          : [
+              "Add blocks on the left to fill out the body of this project page.",
+            ],
+    };
+  }, [active]);
+
+  /* ---- Export ---- */
 
   const exportText = useMemo(() => {
-    const sanitized = stripEmpty(project);
-    if (exportMode === "json") {
-      return JSON.stringify(sanitized, null, 2);
-    }
-    return toTypescript(sanitized);
-  }, [project, exportMode]);
+    const sanitized = allProjects.map(stripEmpty);
+    return exportMode === "json"
+      ? JSON.stringify(sanitized, null, 2)
+      : toTypescriptArray(sanitized);
+  }, [allProjects, exportMode]);
 
   const copy = useCallback(async () => {
     try {
@@ -172,37 +285,21 @@ export function Builder() {
     }
   }, [exportText]);
 
-  /* ----- preview project (always supplies non-throwing defaults) ----- */
-
-  const previewProject: Project = useMemo(
-    () => ({
-      ...project,
-      slug: project.slug || "preview",
-      title: project.title || "Untitled project",
-      client: project.client || "Client",
-      year: project.year || "—",
-      role: project.role || "Role",
-      summary: project.summary || "",
-      intro: project.intro || "Intro / lede goes here.",
-      // ProjectDetail falls back to body when blocks is empty;
-      // give it a tiny placeholder paragraph in that case so the
-      // body column is never visually empty in the preview.
-      body:
-        project.body && project.body.length > 0
-          ? project.body
-          : ["Add blocks on the left to fill out the body of this project page."],
-    }),
-    [project],
-  );
+  /* ---- Render ---- */
 
   return (
     <div className="builder">
       <BuilderTopBar
-        currentSlug={project.slug}
-        onLoad={loadFromSeed}
-        onReset={reset}
+        allProjects={allProjects}
+        activeIndex={activeIndex}
+        onSwitch={switchTo}
+        onNew={newProject}
+        onDelete={deleteActive}
         onToggleExport={() => setExportOpen((v) => !v)}
         exportOpen={exportOpen}
+        saveStatus={saveStatus}
+        onLogout={logout}
+        loaded={loaded}
       />
 
       {exportOpen && (
@@ -218,12 +315,28 @@ export function Builder() {
 
       <div className="builder__split">
         <aside className="builder__editor">
-          <EditorForm project={project} update={update} setProject={setProject} />
+          {!loaded ? (
+            <p className="builder__loading">Loading projects…</p>
+          ) : !active ? (
+            <EmptyState onNew={newProject} count={allProjects.length} />
+          ) : (
+            <EditorForm
+              project={active}
+              update={update}
+              updateActive={updateActive}
+            />
+          )}
         </aside>
 
         <main className="builder__preview" aria-label="Live preview">
           <div className="builder__preview-frame">
-            <ProjectDetail project={previewProject} isPreview />
+            {previewProject ? (
+              <ProjectDetail project={previewProject} isPreview />
+            ) : (
+              <div className="builder__preview-empty">
+                <p>No project selected.</p>
+              </div>
+            )}
           </div>
         </main>
       </div>
@@ -236,47 +349,74 @@ export function Builder() {
    =========================================================== */
 
 function BuilderTopBar({
-  currentSlug,
-  onLoad,
-  onReset,
+  allProjects,
+  activeIndex,
+  onSwitch,
+  onNew,
+  onDelete,
   onToggleExport,
   exportOpen,
+  saveStatus,
+  onLogout,
+  loaded,
 }: {
-  currentSlug: string;
-  onLoad: (slug: string) => void;
-  onReset: () => void;
+  allProjects: Project[];
+  activeIndex: number;
+  onSwitch: (i: number) => void;
+  onNew: () => void;
+  onDelete: () => void;
   onToggleExport: () => void;
   exportOpen: boolean;
+  saveStatus: SaveStatus;
+  onLogout: () => void;
+  loaded: boolean;
 }) {
   return (
     <header className="builder__bar">
       <div className="builder__bar-left">
         <span className="builder__brand">
-          Project Builder <span className="builder__brand-dim">/ dev only</span>
+          Project Builder
+          <span className="builder__brand-dim">
+            {" "}
+            / {allProjects.length} project{allProjects.length === 1 ? "" : "s"}
+          </span>
         </span>
+        <SaveIndicator status={saveStatus} loaded={loaded} />
       </div>
 
       <div className="builder__bar-right">
         <label className="builder__select">
-          <span>Load</span>
+          <span>Editing</span>
           <select
-            value={currentSlug && seedProjects.some((p) => p.slug === currentSlug) ? currentSlug : ""}
-            onChange={(e) => onLoad(e.target.value)}
+            value={activeIndex}
+            onChange={(e) => onSwitch(Number(e.target.value))}
+            disabled={!loaded || allProjects.length === 0}
           >
-            <option value="">— pick a project —</option>
-            <option value="__new__">+ New blank project</option>
-            <optgroup label="Existing projects">
-              {seedProjects.map((p) => (
-                <option key={p.slug} value={p.slug}>
-                  {p.title}
-                </option>
-              ))}
-            </optgroup>
+            <option value={-1}>— pick a project —</option>
+            {allProjects.map((p, i) => (
+              <option key={i} value={i}>
+                {p.title || p.slug || `Untitled ${i + 1}`}
+              </option>
+            ))}
           </select>
         </label>
 
-        <button type="button" className="builder__btn" onClick={onReset}>
-          Reset
+        <button
+          type="button"
+          className="builder__btn"
+          onClick={onNew}
+          disabled={!loaded}
+        >
+          + New
+        </button>
+
+        <button
+          type="button"
+          className="builder__btn"
+          onClick={onDelete}
+          disabled={activeIndex < 0}
+        >
+          Delete
         </button>
 
         <button
@@ -287,8 +427,62 @@ function BuilderTopBar({
         >
           {exportOpen ? "Close export" : "Export"}
         </button>
+
+        <button
+          type="button"
+          className="builder__btn builder__btn--ghost"
+          onClick={onLogout}
+          title="Sign out"
+        >
+          Sign out
+        </button>
       </div>
     </header>
+  );
+}
+
+function SaveIndicator({
+  status,
+  loaded,
+}: {
+  status: SaveStatus;
+  loaded: boolean;
+}) {
+  let label = "";
+  let cls = "builder__save";
+  if (!loaded) {
+    label = "Loading";
+    cls += " is-loading";
+  } else if (status === "saving") {
+    label = "Saving…";
+    cls += " is-saving";
+  } else if (status === "error") {
+    label = "Save failed — retrying on next edit";
+    cls += " is-error";
+  } else {
+    label = "Saved";
+    cls += " is-saved";
+  }
+  return <span className={cls}>{label}</span>;
+}
+
+/* ===========================================================
+   Empty state
+   =========================================================== */
+
+function EmptyState({ onNew, count }: { onNew: () => void; count: number }) {
+  return (
+    <div className="builder__empty-state">
+      <h2>No project selected</h2>
+      <p>
+        {count > 0
+          ? "Pick one from the dropdown above to start editing, or create a new project."
+          : "There are no projects yet. Create one to get started."}
+      </p>
+      <button type="button" className="ed__add" onClick={onNew}>
+        + New blank project
+      </button>
+    </div>
   );
 }
 
@@ -340,9 +534,10 @@ function ExportPanel({
         </div>
       </div>
       <p className="builder__export-help">
-        Paste this into <code>data/projects.ts</code> as an entry in the{" "}
-        <code>projects</code> array (replacing any existing entry with the same{" "}
-        <code>slug</code>).
+        Auto-save handles editing. Use this when you&apos;re ready to{" "}
+        <strong>freeze</strong> content into the codebase: copy this entire
+        array and replace the body of the <code>projects</code> export in{" "}
+        <code>data/projects.ts</code>.
       </p>
       <textarea
         readOnly
@@ -361,11 +556,11 @@ function ExportPanel({
 function EditorForm({
   project,
   update,
-  setProject,
+  updateActive,
 }: {
   project: Project;
   update: <K extends keyof Project>(key: K, value: Project[K]) => void;
-  setProject: React.Dispatch<React.SetStateAction<Project>>;
+  updateActive: (patch: Partial<Project>) => void;
 }) {
   return (
     <div className="ed">
@@ -424,10 +619,7 @@ function EditorForm({
             placeholder="Brand strategy, copywriting, design"
           />
         </Field>
-        <Field
-          label="Hero image"
-          hint="Absolute URL or /assets/... path"
-        >
+        <Field label="Hero image" hint="Absolute URL or /assets/... path">
           <input
             type="text"
             value={project.image ?? ""}
@@ -449,7 +641,10 @@ function EditorForm({
       </Group>
 
       <Group title="Intro">
-        <Field label="Tile summary" hint="Shown beneath the homepage tile title">
+        <Field
+          label="Tile summary"
+          hint="Shown beneath the homepage tile title"
+        >
           <textarea
             rows={3}
             value={project.summary}
@@ -476,15 +671,22 @@ function EditorForm({
                 e.target.value
                   .split("\n")
                   .map((l) => l.trimStart())
-                  .filter((l, i, arr) => l.length > 0 || i === arr.length - 1),
+                  .filter(
+                    (l, i, arr) => l.length > 0 || i === arr.length - 1,
+                  ),
               )
             }
-            placeholder={"Positioning, values, and messaging\nVisual identity refresh\n…"}
+            placeholder={
+              "Positioning, values, and messaging\nVisual identity refresh\n…"
+            }
           />
         </Field>
       </Group>
 
-      <Group title="Metrics" subtitle="Optional pull-out figures shown above the body">
+      <Group
+        title="Metrics"
+        subtitle="Optional pull-out figures shown above the body"
+      >
         <MetricsEditor
           metrics={project.metrics ?? []}
           onChange={(metrics) =>
@@ -493,28 +695,33 @@ function EditorForm({
         />
       </Group>
 
-      <Group title="Body blocks" subtitle="The visually-authored body of the page">
+      <Group
+        title="Body blocks"
+        subtitle="The visually-authored body of the page"
+      >
         <BlocksEditor
           blocks={project.blocks ?? []}
-          onChange={(blocks) =>
-            setProject((p) => ({ ...p, blocks }))
-          }
+          onChange={(blocks) => updateActive({ blocks })}
         />
       </Group>
 
-      <Group title="Outcome" subtitle="Italicised pull-out at the end of the body">
+      <Group
+        title="Outcome"
+        subtitle="Italicised pull-out at the end of the body"
+      >
         <Field label="Outcome statement">
           <textarea
             rows={3}
             value={project.outcome ?? ""}
-            onChange={(e) =>
-              update("outcome", e.target.value || undefined)
-            }
+            onChange={(e) => update("outcome", e.target.value || undefined)}
           />
         </Field>
       </Group>
 
-      <Group title="Gallery" subtitle="Full-width images at the bottom of the page">
+      <Group
+        title="Gallery"
+        subtitle="Full-width images at the bottom of the page"
+      >
         <GalleryEditor
           images={project.gallery ?? []}
           onChange={(gallery) =>
@@ -716,9 +923,7 @@ function BlocksEditor({
       <div className="blocks__adder">
         <select
           value={adderType}
-          onChange={(e) =>
-            setAdderType(e.target.value as ProjectBlock["type"])
-          }
+          onChange={(e) => setAdderType(e.target.value as ProjectBlock["type"])}
         >
           {BLOCK_TYPES.map((t) => (
             <option key={t.value} value={t.value}>
@@ -747,7 +952,8 @@ function BlockEditor({
   onMoveUp?: () => void;
   onMoveDown?: () => void;
 }) {
-  const label = BLOCK_TYPES.find((t) => t.value === block.type)?.label ?? block.type;
+  const label =
+    BLOCK_TYPES.find((t) => t.value === block.type)?.label ?? block.type;
   return (
     <div className="block-card">
       <header className="block-card__head">
@@ -791,8 +997,6 @@ function BlockEditor({
   );
 }
 
-/* Per-type field editors */
-
 function BlockFields({
   block,
   onChange,
@@ -803,16 +1007,11 @@ function BlockFields({
   switch (block.type) {
     case "richText":
       return (
-        <Field
-          label="Content"
-          hint="Double-newline separates paragraphs"
-        >
+        <Field label="Content" hint="Double-newline separates paragraphs">
           <textarea
             rows={6}
             value={block.content}
-            onChange={(e) =>
-              onChange({ ...block, content: e.target.value })
-            }
+            onChange={(e) => onChange({ ...block, content: e.target.value })}
           />
         </Field>
       );
@@ -831,10 +1030,7 @@ function BlockFields({
             <select
               value={block.level ?? "h3"}
               onChange={(e) =>
-                onChange({
-                  ...block,
-                  level: e.target.value as "h2" | "h3",
-                })
+                onChange({ ...block, level: e.target.value as "h2" | "h3" })
               }
             >
               <option value="h3">Small (h3)</option>
@@ -859,10 +1055,7 @@ function BlockFields({
               type="text"
               value={block.attribution ?? ""}
               onChange={(e) =>
-                onChange({
-                  ...block,
-                  attribution: e.target.value || undefined,
-                })
+                onChange({ ...block, attribution: e.target.value || undefined })
               }
             />
           </Field>
@@ -894,10 +1087,7 @@ function BlockFields({
               type="text"
               value={block.caption ?? ""}
               onChange={(e) =>
-                onChange({
-                  ...block,
-                  caption: e.target.value || undefined,
-                })
+                onChange({ ...block, caption: e.target.value || undefined })
               }
             />
           </Field>
@@ -941,10 +1131,7 @@ function BlockFields({
                 type="text"
                 value={block.label ?? ""}
                 onChange={(e) =>
-                  onChange({
-                    ...block,
-                    label: e.target.value || undefined,
-                  })
+                  onChange({ ...block, label: e.target.value || undefined })
                 }
               />
             </Field>
@@ -953,10 +1140,7 @@ function BlockFields({
                 type="text"
                 value={block.title ?? ""}
                 onChange={(e) =>
-                  onChange({
-                    ...block,
-                    title: e.target.value || undefined,
-                  })
+                  onChange({ ...block, title: e.target.value || undefined })
                 }
               />
             </Field>
@@ -986,9 +1170,7 @@ function GalleryBlockEditor({
     i: number,
     patch: Partial<{ src: string; alt?: string; caption?: string }>,
   ) =>
-    onChange(
-      images.map((img, idx) => (idx === i ? { ...img, ...patch } : img)),
-    );
+    onChange(images.map((img, idx) => (idx === i ? { ...img, ...patch } : img)));
   const remove = (i: number) =>
     onChange(images.filter((_, idx) => idx !== i));
   const add = () => onChange([...images, { src: "", alt: "", caption: "" }]);
@@ -1081,9 +1263,7 @@ function TwoColumnSideEditor({
             <input
               type="text"
               value={child.src}
-              onChange={(e) =>
-                onChange({ ...child, src: e.target.value })
-              }
+              onChange={(e) => onChange({ ...child, src: e.target.value })}
               placeholder="/assets/image.jpg"
             />
           </Field>
@@ -1092,10 +1272,7 @@ function TwoColumnSideEditor({
               type="text"
               value={child.alt ?? ""}
               onChange={(e) =>
-                onChange({
-                  ...child,
-                  alt: e.target.value || undefined,
-                })
+                onChange({ ...child, alt: e.target.value || undefined })
               }
             />
           </Field>
@@ -1104,10 +1281,7 @@ function TwoColumnSideEditor({
               type="text"
               value={child.caption ?? ""}
               onChange={(e) =>
-                onChange({
-                  ...child,
-                  caption: e.target.value || undefined,
-                })
+                onChange({ ...child, caption: e.target.value || undefined })
               }
             />
           </Field>
@@ -1133,30 +1307,19 @@ function slugify(s: string) {
 /** Drop empty strings, empty arrays, and undefined fields for a cleaner export. */
 function stripEmpty(p: Project): Project {
   const out: Project = { ...p };
-
-  // Empty body when blocks are present — body is the legacy fallback.
-  if (out.blocks && out.blocks.length > 0) {
-    out.body = [];
-  }
-
-  // Remove undefined-y optionals
+  if (out.blocks && out.blocks.length > 0) out.body = [];
   if (!out.image) delete out.image;
   if (!out.href) delete out.href;
   if (!out.outcome) delete out.outcome;
   if (!out.gallery || out.gallery.length === 0) delete out.gallery;
   if (!out.metrics || out.metrics.length === 0) delete out.metrics;
   if (!out.blocks || out.blocks.length === 0) delete out.blocks;
-
   return out;
 }
 
-/**
- * Render a Project as a TS object literal. Uses JSON.stringify for the
- * heavy lifting then unquotes object keys so the result reads as TS.
- */
-function toTypescript(p: Project): string {
-  const json = JSON.stringify(p, null, 2);
-  // Unquote object keys that are valid identifiers (good-enough for our shape).
-  const unquoted = json.replace(/"([A-Za-z_][A-Za-z0-9_]*)":/g, "$1:");
-  return unquoted;
+/** Render an array of Projects as a TS array literal. */
+function toTypescriptArray(arr: Project[]): string {
+  const json = JSON.stringify(arr, null, 2);
+  // Unquote object keys that are valid identifiers.
+  return json.replace(/"([A-Za-z_][A-Za-z0-9_]*)":/g, "$1:");
 }

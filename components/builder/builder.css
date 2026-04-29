@@ -10,7 +10,8 @@
    rules leak into the production site.
    ========================================================= */
 
-.builder {
+.builder,
+.builder-login {
   --b-bg: #1a1a1d;
   --b-surface: #232329;
   --b-surface-2: #2c2c33;
@@ -21,24 +22,28 @@
   --b-ink-faint: #6b6864;
   --b-accent: #d98861;
   --b-accent-soft: #b85c38;
+  --b-success: #6fbf73;
+  --b-warn: #d97e3f;
+  --b-error: #e36766;
   --b-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas,
     monospace;
+  font-family: var(--sans);
+  color: var(--b-ink);
+}
 
+.builder {
   position: fixed;
   inset: 0;
   z-index: 200;
   display: flex;
   flex-direction: column;
   background: var(--b-bg);
-  color: var(--b-ink);
-  font-family: var(--sans);
   font-size: 13px;
   line-height: 1.5;
   letter-spacing: 0;
   overflow: hidden;
 }
 
-/* Disable the global film grain inside the builder — reads as visual noise */
 .builder::before {
   content: "";
   position: absolute;
@@ -46,6 +51,12 @@
   pointer-events: none;
   background: var(--b-bg);
   z-index: -1;
+}
+
+.builder__loading {
+  padding: 24px 18px;
+  font-size: 13px;
+  color: var(--b-ink-soft);
 }
 
 /* ---------- Top bar ---------- */
@@ -59,6 +70,14 @@
   padding: 12px 16px;
   border-bottom: 1px solid var(--b-border);
   background: var(--b-surface);
+  flex-wrap: wrap;
+}
+
+.builder__bar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 
 .builder__brand {
@@ -71,12 +90,16 @@
 .builder__brand-dim {
   color: var(--b-ink-faint);
   margin-left: 6px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--sans);
 }
 
 .builder__bar-right {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .builder__select {
@@ -114,17 +137,104 @@
   cursor: pointer;
   transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
-.builder__btn:hover {
+.builder__btn:hover:not(:disabled) {
   border-color: var(--b-ink-soft);
+}
+.builder__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 .builder__btn--primary {
   background: var(--b-accent);
   color: #1a1a1d;
   border-color: var(--b-accent);
 }
-.builder__btn--primary:hover {
+.builder__btn--primary:hover:not(:disabled) {
   background: var(--b-accent-soft);
   border-color: var(--b-accent-soft);
+}
+.builder__btn--ghost {
+  background: transparent;
+  color: var(--b-ink-soft);
+}
+.builder__btn--ghost:hover:not(:disabled) {
+  color: var(--b-ink);
+}
+
+/* ---------- Save indicator ---------- */
+
+.builder__save {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--b-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border: 1px solid var(--b-border);
+  background: var(--b-bg);
+  color: var(--b-ink-soft);
+  white-space: nowrap;
+}
+.builder__save::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: 0 0 auto;
+}
+.builder__save.is-loading,
+.builder__save.is-saving {
+  color: var(--b-warn);
+}
+.builder__save.is-saving::before {
+  animation: builder-pulse 0.9s var(--ease, ease) infinite;
+}
+.builder__save.is-saved {
+  color: var(--b-success);
+}
+.builder__save.is-idle {
+  color: var(--b-ink-faint);
+}
+.builder__save.is-error {
+  color: var(--b-error);
+  border-color: var(--b-error);
+}
+
+@keyframes builder-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* ---------- Empty state ---------- */
+
+.builder__empty-state {
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: left;
+}
+.builder__empty-state h2 {
+  font-family: var(--b-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--b-ink);
+  font-weight: 500;
+}
+.builder__empty-state p {
+  font-size: 13px;
+  color: var(--b-ink-soft);
+  line-height: 1.55;
+}
+
+.builder__preview-empty {
+  padding: 80px 40px;
+  color: var(--ink-soft);
+  font-style: italic;
+  font-family: var(--serif);
 }
 
 /* ---------- Export panel ---------- */
@@ -138,6 +248,7 @@
   flex-direction: column;
   gap: 10px;
   max-height: 50vh;
+  overflow: hidden;
 }
 
 .builder__export-head {
@@ -186,6 +297,9 @@
   border: 1px solid var(--b-border-soft);
   color: var(--b-ink);
 }
+.builder__export-help strong {
+  color: var(--b-ink);
+}
 
 .builder__export-text {
   flex: 1 1 auto;
@@ -220,17 +334,19 @@
 .builder__preview {
   overflow-y: auto;
   background: var(--bg);
-  /* Use the site colour underneath so the preview is unmistakably the site */
+  font-size: 16px;
+  line-height: 1.55;
+  letter-spacing: -0.005em;
+  color: var(--ink);
 }
 .builder__preview-frame {
-  /* The preview renders the actual ProjectDetail; we just need to make
-     sure the global Nav offset doesn't apply since we're not rendering
-     the Nav here. The .project class already has padding-top: 160px,
-     which we want to compress slightly inside the preview frame. */
   padding-top: 0;
 }
 .builder__preview .project {
   padding-top: 60px;
+}
+.builder__preview .hero__name {
+  display: none;
 }
 
 @media (max-width: 1100px) {
@@ -318,7 +434,6 @@
 .ed__field textarea {
   resize: vertical;
   min-height: 70px;
-  font-family: var(--sans);
 }
 .ed__field input[type="text"]:focus,
 .ed__field textarea:focus,
@@ -405,8 +520,6 @@
   border-color: var(--b-accent);
   color: var(--b-accent);
 }
-
-/* Nested grouped editors (gallery images, etc.) */
 
 .ed__nested {
   display: flex;
@@ -500,18 +613,88 @@
   gap: 12px;
 }
 
-/* ---------- Preview chrome ---------- */
+/* =========================================================
+   LOGIN
+   ========================================================= */
 
-.builder__preview {
-  /* Make sure the preview never gets affected by builder's font-size */
-  font-size: 16px;
-  line-height: 1.55;
-  letter-spacing: -0.005em;
-  color: var(--ink);
+.builder-login {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  background: var(--b-bg);
+  padding: 24px;
 }
-
-/* The site has a fixed Nav inside the production page; in the preview we
-   don't render the Nav, so reclaim the top space for the project hero. */
-.builder__preview .hero__name {
-  display: none;
+.builder-login__form {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 32px 28px;
+  border: 1px solid var(--b-border);
+  background: var(--b-surface);
+}
+.builder-login__title {
+  font-family: var(--b-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--b-ink);
+  font-weight: 500;
+}
+.builder-login__hint {
+  font-size: 13px;
+  color: var(--b-ink-soft);
+  line-height: 1.5;
+}
+.builder-login__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.builder-login__field span {
+  font-family: var(--b-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--b-ink-soft);
+}
+.builder-login__field input {
+  font-family: var(--sans);
+  font-size: 14px;
+  background: var(--b-bg);
+  color: var(--b-ink);
+  border: 1px solid var(--b-border);
+  padding: 10px 12px;
+}
+.builder-login__field input:focus {
+  outline: 1px solid var(--b-accent);
+  outline-offset: -1px;
+  border-color: var(--b-accent);
+}
+.builder-login__error {
+  font-size: 12px;
+  color: var(--b-error);
+}
+.builder-login__submit {
+  font-family: var(--b-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--b-accent);
+  color: #1a1a1d;
+  border: 1px solid var(--b-accent);
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.builder-login__submit:hover:not(:disabled) {
+  background: var(--b-accent-soft);
+  border-color: var(--b-accent-soft);
+}
+.builder-login__submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
