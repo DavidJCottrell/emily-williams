@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 
 const navItems = [
     { id: "about", label: "About" },
@@ -16,9 +16,22 @@ export function Nav() {
     const [activeSection, setActiveSection] = useState("about");
     const [isBrandVisible, setIsBrandVisible] = useState(!isHome);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         // Section-spy only runs on the home page
         if (!isHome) return;
+
+        const navigationEntry = performance.getEntriesByType(
+            "navigation",
+        )[0] as PerformanceNavigationTiming | undefined;
+        const isReload = navigationEntry?.type === "reload";
+
+        if (!window.location.hash && !isReload) {
+            const root = document.documentElement;
+            const previousScrollBehavior = root.style.scrollBehavior;
+            root.style.scrollBehavior = "auto";
+            window.scrollTo(0, 0);
+            root.style.scrollBehavior = previousScrollBehavior;
+        }
 
         const getSections = () =>
             navItems
@@ -98,6 +111,8 @@ export function Nav() {
         };
 
         updateActiveSection();
+        document.documentElement.classList.add("brand-motion-ready");
+
         window.addEventListener("scroll", requestUpdate, { passive: true });
         window.addEventListener("resize", requestUpdate);
 
@@ -105,6 +120,7 @@ export function Nav() {
             window.cancelAnimationFrame(frameId);
             window.removeEventListener("scroll", requestUpdate);
             window.removeEventListener("resize", requestUpdate);
+            document.documentElement.classList.remove("brand-motion-ready");
             document.documentElement.style.removeProperty("--brand-progress");
             document.documentElement.style.removeProperty("--brand-translate-y");
             document.documentElement.style.removeProperty("--brand-scale");

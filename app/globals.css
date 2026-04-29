@@ -25,13 +25,22 @@
   --hero-brand-opacity: 1;
 }
 
+/*
+   Hide the fixed hero wordmark until the client has calculated its
+   scroll-restored position. This prevents a one-frame "huge title" flash
+   when refreshing while already scrolled down the home page.
+*/
+html:not(.brand-motion-ready) .hero__name {
+  opacity: 0;
+}
+
 /* =========================================================
    RESET
    ========================================================= */
 *,
 *::before,
 *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-anchor: none; }
 body {
   font-family: var(--sans);
   background: var(--bg);
