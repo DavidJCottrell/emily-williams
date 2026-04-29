@@ -1067,3 +1067,159 @@ body::before {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* =========================================================
+   PROJECT BLOCKS — body content blocks rendered by
+   <ProjectBlocks /> inside .project__copy. Inherit the
+   typography of the body column; add only what the existing
+   styles don't already cover.
+   ========================================================= */
+
+.block + .block {
+  margin-top: clamp(28px, 4vh, 44px);
+}
+
+/* Rich text: the existing .project__copy already styles paragraphs,
+   so we only need to space paragraphs within a single rich-text block. */
+.block--richtext p + p {
+  margin-top: 1.2em;
+}
+
+/* Headings inside the body */
+.block--heading {
+  font-family: var(--serif);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+.block--heading-h2 {
+  font-size: clamp(28px, 2.6vw, 40px);
+  line-height: 1.05;
+  margin-top: 0.4em;
+}
+.block--heading-h3 {
+  font-size: clamp(22px, 1.6vw, 28px);
+  line-height: 1.15;
+  margin-top: 0.4em;
+}
+
+/* Pull quote */
+.block--quote {
+  border-left: 1px solid var(--rule);
+  padding: 4px 0 4px 28px;
+  margin-block: clamp(16px, 2.5vh, 28px);
+}
+.block--quote blockquote p {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(20px, 1.5vw, 26px);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.block--quote blockquote p::before { content: "\201C"; }
+.block--quote blockquote p::after  { content: "\201D"; }
+.block--quote figcaption {
+  margin-top: 12px;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* Images and gallery within the body column */
+.block--image img,
+.block--gallery img,
+.block__twocol-side img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 2px;
+  filter: saturate(0.95) contrast(1.02);
+}
+.block--image figcaption,
+.block--gallery figcaption,
+.block__twocol-side figcaption {
+  margin-top: 10px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.block--gallery {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(12px, 1.6vw, 20px);
+}
+.block--gallery > figure {
+  display: flex;
+  flex-direction: column;
+}
+@media (max-width: 600px) {
+  .block--gallery { grid-template-columns: 1fr; }
+}
+
+/* Two column block */
+.block--twocol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(20px, 2.4vw, 36px);
+  align-items: start;
+}
+.block__twocol-side p + p { margin-top: 0.9em; }
+@media (max-width: 700px) {
+  .block--twocol { grid-template-columns: 1fr; }
+}
+
+/* Image placeholder (used when src is missing in the builder) */
+.block__placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--bg-soft);
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+.block__placeholder::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border: 1px solid var(--rule);
+  pointer-events: none;
+}
+.block__placeholder span {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+/* Labelled section (Challenge / Approach / etc.) */
+.block--section {
+  padding: clamp(24px, 4vh, 36px) 0;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.block__section-label {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+.block__section-title {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(22px, 1.7vw, 30px);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.block--section p + p { margin-top: 1em; }

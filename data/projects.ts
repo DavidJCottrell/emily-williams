@@ -5,6 +5,80 @@ export type ProjectMetric = {
   label: string;
 };
 
+/* ===========================================================
+   CONTENT BLOCKS
+   ===========================================================
+   Blocks render inside the existing project body column. They
+   inherit the typography/spacing of `.project__copy` so the
+   sidebar layout is preserved.
+
+   Add new block types by:
+     1. extending the ProjectBlock union below
+     2. handling the new `type` in components/ProjectBlocks.tsx
+     3. adding an editor for it in components/builder/Builder.tsx
+   =========================================================== */
+
+export type RichTextBlock = {
+  type: "richText";
+  /** Plain prose. Double newlines split paragraphs. */
+  content: string;
+};
+
+export type HeadingBlock = {
+  type: "heading";
+  text: string;
+  /** Visual level — defaults to "h3". */
+  level?: "h2" | "h3";
+};
+
+export type QuoteBlock = {
+  type: "quote";
+  text: string;
+  attribution?: string;
+};
+
+export type ImageBlock = {
+  type: "image";
+  src: string;
+  alt?: string;
+  caption?: string;
+};
+
+export type GalleryBlock = {
+  type: "gallery";
+  images: { src: string; alt?: string; caption?: string }[];
+};
+
+/** A side-by-side block. Each side is a single nested block. */
+export type TwoColumnBlock = {
+  type: "twoColumn";
+  left: TwoColumnChild;
+  right: TwoColumnChild;
+};
+export type TwoColumnChild =
+  | { type: "richText"; content: string }
+  | { type: "image"; src: string; alt?: string; caption?: string };
+
+/** Labelled section — for "Challenge", "Approach", "Outcome", etc. */
+export type SectionBlock = {
+  type: "section";
+  /** Eyebrow label, e.g. "Challenge". */
+  label?: string;
+  /** Optional title beneath the label. */
+  title?: string;
+  /** Body prose. Double newlines split paragraphs. */
+  body: string;
+};
+
+export type ProjectBlock =
+  | RichTextBlock
+  | HeadingBlock
+  | QuoteBlock
+  | ImageBlock
+  | GalleryBlock
+  | TwoColumnBlock
+  | SectionBlock;
+
 export type Project = {
   /** URL slug — used at /work/[slug] */
   slug: string;
@@ -24,8 +98,16 @@ export type Project = {
   image?: string;
   /** Lede / opening paragraph on the detail page */
   intro: string;
-  /** Long-form body paragraphs on the detail page */
+  /**
+   * Long-form body paragraphs — legacy field. Used as a fallback when
+   * `blocks` is not provided. New projects should prefer `blocks`.
+   */
   body: string[];
+  /**
+   * Structured content blocks for the body column. When present, these
+   * render in place of `body`. Authored via /builder.
+   */
+  blocks?: ProjectBlock[];
   /** Bullet list shown in the sidebar of the detail page */
   scope: string[];
   /** Optional outcome statement */

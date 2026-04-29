@@ -1,0 +1,517 @@
+/* =========================================================
+   BUILDER — utilitarian dev-tool chrome.
+
+   Deliberately distinct from the warm site aesthetic so the
+   editor (left) and the preview (right) are visually separate
+   surfaces. Cool greys, monospace for technical bits, dense
+   form layout, sharp corners.
+
+   This file is imported only by /builder, so none of these
+   rules leak into the production site.
+   ========================================================= */
+
+.builder {
+  --b-bg: #1a1a1d;
+  --b-surface: #232329;
+  --b-surface-2: #2c2c33;
+  --b-border: #38383f;
+  --b-border-soft: #2e2e35;
+  --b-ink: #e8e6e0;
+  --b-ink-soft: #9a9690;
+  --b-ink-faint: #6b6864;
+  --b-accent: #d98861;
+  --b-accent-soft: #b85c38;
+  --b-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas,
+    monospace;
+
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  background: var(--b-bg);
+  color: var(--b-ink);
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: 0;
+  overflow: hidden;
+}
+
+/* Disable the global film grain inside the builder — reads as visual noise */
+.builder::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--b-bg);
+  z-index: -1;
+}
+
+/* ---------- Top bar ---------- */
+
+.builder__bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--b-border);
+  background: var(--b-surface);
+}
+
+.builder__brand {
+  font-family: var(--b-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--b-ink);
+  text-transform: uppercase;
+}
+.builder__brand-dim {
+  color: var(--b-ink-faint);
+  margin-left: 6px;
+}
+
+.builder__bar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.builder__select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--b-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--b-ink-soft);
+}
+.builder__select select {
+  font-family: var(--sans);
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+  background: var(--b-surface-2);
+  color: var(--b-ink);
+  border: 1px solid var(--b-border);
+  padding: 6px 10px;
+  min-width: 200px;
+  cursor: pointer;
+}
+
+.builder__btn {
+  font-family: var(--b-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--b-surface-2);
+  color: var(--b-ink);
+  border: 1px solid var(--b-border);
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.builder__btn:hover {
+  border-color: var(--b-ink-soft);
+}
+.builder__btn--primary {
+  background: var(--b-accent);
+  color: #1a1a1d;
+  border-color: var(--b-accent);
+}
+.builder__btn--primary:hover {
+  background: var(--b-accent-soft);
+  border-color: var(--b-accent-soft);
+}
+
+/* ---------- Export panel ---------- */
+
+.builder__export {
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--b-border);
+  background: var(--b-surface);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 50vh;
+}
+
+.builder__export-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.builder__export-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.builder__seg {
+  display: inline-flex;
+  border: 1px solid var(--b-border);
+}
+.builder__seg button {
+  font-family: var(--b-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--b-ink-soft);
+  border: none;
+  cursor: pointer;
+}
+.builder__seg button.is-on {
+  background: var(--b-surface-2);
+  color: var(--b-ink);
+}
+.builder__seg button + button {
+  border-left: 1px solid var(--b-border);
+}
+
+.builder__export-help {
+  font-size: 12px;
+  color: var(--b-ink-soft);
+}
+.builder__export-help code {
+  font-family: var(--b-mono);
+  font-size: 11.5px;
+  background: var(--b-surface-2);
+  padding: 1px 5px;
+  border: 1px solid var(--b-border-soft);
+  color: var(--b-ink);
+}
+
+.builder__export-text {
+  flex: 1 1 auto;
+  min-height: 200px;
+  width: 100%;
+  font-family: var(--b-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  background: var(--b-bg);
+  color: var(--b-ink);
+  border: 1px solid var(--b-border);
+  padding: 12px;
+  resize: vertical;
+}
+
+/* ---------- Split layout ---------- */
+
+.builder__split {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: minmax(380px, 480px) 1fr;
+  min-height: 0;
+}
+
+.builder__editor {
+  border-right: 1px solid var(--b-border);
+  background: var(--b-surface);
+  overflow-y: auto;
+  padding: 0 0 64px 0;
+}
+
+.builder__preview {
+  overflow-y: auto;
+  background: var(--bg);
+  /* Use the site colour underneath so the preview is unmistakably the site */
+}
+.builder__preview-frame {
+  /* The preview renders the actual ProjectDetail; we just need to make
+     sure the global Nav offset doesn't apply since we're not rendering
+     the Nav here. The .project class already has padding-top: 160px,
+     which we want to compress slightly inside the preview frame. */
+  padding-top: 0;
+}
+.builder__preview .project {
+  padding-top: 60px;
+}
+
+@media (max-width: 1100px) {
+  .builder__split {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 60vh) minmax(0, 1fr);
+  }
+  .builder__editor {
+    border-right: none;
+    border-bottom: 1px solid var(--b-border);
+  }
+}
+
+/* ---------- Editor form ---------- */
+
+.ed__group {
+  border-bottom: 1px solid var(--b-border-soft);
+}
+.ed__group-head {
+  padding: 18px 18px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: sticky;
+  top: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--b-surface) 80%,
+    transparent 100%
+  );
+  z-index: 1;
+}
+.ed__group-head h2 {
+  font-family: var(--b-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--b-ink);
+  font-weight: 500;
+}
+.ed__group-head p {
+  font-size: 12px;
+  color: var(--b-ink-faint);
+}
+.ed__group-body {
+  padding: 12px 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ed__field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.ed__field-label {
+  font-family: var(--b-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--b-ink-soft);
+}
+.ed__field-hint {
+  font-size: 11px;
+  color: var(--b-ink-faint);
+  line-height: 1.4;
+}
+
+.ed__field input[type="text"],
+.ed__field textarea,
+.ed__field select,
+.ed__list-row input,
+.blocks__adder select {
+  font-family: var(--sans);
+  font-size: 13.5px;
+  line-height: 1.45;
+  letter-spacing: 0;
+  background: var(--b-bg);
+  color: var(--b-ink);
+  border: 1px solid var(--b-border);
+  padding: 8px 10px;
+  width: 100%;
+}
+.ed__field textarea {
+  resize: vertical;
+  min-height: 70px;
+  font-family: var(--sans);
+}
+.ed__field input[type="text"]:focus,
+.ed__field textarea:focus,
+.ed__field select:focus,
+.ed__list-row input:focus {
+  outline: 1px solid var(--b-accent);
+  outline-offset: -1px;
+  border-color: var(--b-accent);
+}
+
+.ed__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.ed__sub {
+  font-family: var(--b-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--b-ink-soft);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+/* ---------- Lists (metrics, gallery) ---------- */
+
+.ed__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ed__list-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.ed__list-row-narrow {
+  flex: 0 0 90px !important;
+  min-width: 0;
+}
+.ed__list-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ed__icon-btn {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  color: var(--b-ink-soft);
+  border: 1px solid var(--b-border);
+  cursor: pointer;
+  font-size: 13px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.ed__icon-btn:hover:not(:disabled) {
+  color: var(--b-ink);
+  border-color: var(--b-ink-soft);
+}
+.ed__icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ed__add {
+  align-self: flex-start;
+  font-family: var(--b-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--b-ink);
+  border: 1px dashed var(--b-border);
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.ed__add:hover {
+  border-color: var(--b-accent);
+  color: var(--b-accent);
+}
+
+/* Nested grouped editors (gallery images, etc.) */
+
+.ed__nested {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--b-border-soft);
+  background: var(--b-surface-2);
+}
+.ed__nested-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--b-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--b-ink-soft);
+}
+
+.ed__twocol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.ed__twocol-side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--b-border-soft);
+  background: var(--b-surface-2);
+}
+@media (max-width: 700px) {
+  .ed__twocol { grid-template-columns: 1fr; }
+}
+
+/* ---------- Blocks ---------- */
+
+.blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.blocks__empty {
+  font-size: 12.5px;
+  color: var(--b-ink-faint);
+  font-style: italic;
+  padding: 16px;
+  border: 1px dashed var(--b-border);
+  text-align: center;
+}
+.blocks__adder {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: stretch;
+  margin-top: 4px;
+}
+.blocks__adder select {
+  width: 100%;
+}
+
+.block-card {
+  border: 1px solid var(--b-border);
+  background: var(--b-surface-2);
+}
+.block-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--b-border-soft);
+  background: var(--b-bg);
+}
+.block-card__type {
+  font-family: var(--b-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--b-accent);
+}
+.block-card__controls {
+  display: flex;
+  gap: 6px;
+}
+.block-card__body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ---------- Preview chrome ---------- */
+
+.builder__preview {
+  /* Make sure the preview never gets affected by builder's font-size */
+  font-size: 16px;
+  line-height: 1.55;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+
+/* The site has a fixed Nav inside the production page; in the preview we
+   don't render the Nav, so reclaim the top space for the project hero. */
+.builder__preview .hero__name {
+  display: none;
+}
