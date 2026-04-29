@@ -22,15 +22,7 @@ export function ProjectDetail({
 }: ProjectDetailProps) {
   const meta = categoryMeta[project.category];
 
-  // Three placeholder slots if no gallery is provided yet
-  const galleryItems =
-    project.gallery && project.gallery.length > 0
-      ? project.gallery.map((src) => ({ src, kind: "image" as const }))
-      : [
-          { src: undefined, kind: "placeholder" as const },
-          { src: undefined, kind: "placeholder" as const },
-          { src: undefined, kind: "placeholder" as const },
-        ];
+  const galleryItems = project.gallery && project.gallery.length > 0 ? project.gallery.map((src) => ({ src, kind: "image" as const })) : [];
 
   const useBlocks = project.blocks && project.blocks.length > 0;
 
