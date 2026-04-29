@@ -40,14 +40,14 @@ export function Contact() {
         <Reveal>
           <a
             ref={ctaRef}
-            href="mailto:hello@emilywilliams.com"
+            href="mailto:emilywilliams096@gmail.com"
             className="contact__cta"
           >
             Let&apos;s <em>have a chat</em>.
           </a>
         </Reveal>
         <Reveal className="contact__details">
-          <a href="mailto:hello@emilywilliams.com">emilywilliams096@gmail.com</a>
+          <a href="mailto:emilywilliams096@gmail.com">emilywilliams096@gmail.com</a>
           <a href="https://www.instagram.com/shhmemm_?igsh=ZHQ4MDJwc3Izdmdr" target="_blank" rel="noopener">
             Instagram
           </a>
