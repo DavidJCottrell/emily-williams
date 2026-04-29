@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 
 const navItems = [
     { id: "about", label: "About" },
@@ -14,11 +14,27 @@ export function Nav() {
     const pathname = usePathname();
     const isHome = pathname === "/";
     const [activeSection, setActiveSection] = useState("about");
-    const [isBrandVisible, setIsBrandVisible] = useState(!isHome);
+    // Default to hidden. The layout effect below sets the correct value
+    // synchronously before first paint based on the route + scroll
+    // position. Starting from a fixed `false` avoids any SSR/hydration
+    // timing weirdness around `usePathname` and any chance of the
+    // initial state being misread.
+    const [isBrandVisible, setIsBrandVisible] = useState(false);
 
     useLayoutEffect(() => {
-        // Section-spy only runs on the home page
-        if (!isHome) return;
+        const root = document.documentElement;
+
+        // ----- Non-home pages: small brand is always visible. -----
+        if (!isHome) {
+            setIsBrandVisible(true);
+            root.style.removeProperty("--brand-progress");
+            root.style.removeProperty("--brand-translate-y");
+            root.style.removeProperty("--brand-scale");
+            root.style.removeProperty("--hero-brand-opacity");
+            return;
+        }
+
+        // ----- Home page: brand visibility tracks scroll. -----
 
         const navigationEntry = performance.getEntriesByType(
             "navigation",
@@ -26,7 +42,6 @@ export function Nav() {
         const isReload = navigationEntry?.type === "reload";
 
         if (!window.location.hash && !isReload) {
-            const root = document.documentElement;
             const previousScrollBehavior = root.style.scrollBehavior;
             root.style.scrollBehavior = "auto";
             window.scrollTo(0, 0);
@@ -39,9 +54,9 @@ export function Nav() {
                 .filter((section): section is HTMLElement => Boolean(section));
 
         let frameId = 0;
+        let settleId = 0;
 
         const updateBrandMotion = () => {
-            const root = document.documentElement;
             const heroName = document.querySelector<HTMLElement>(".hero__name");
             const navBrand = document.querySelector<HTMLElement>(".nav__brand");
             const nav = document.querySelector<HTMLElement>(".nav");
@@ -94,11 +109,7 @@ export function Nav() {
 
             const current = sections.reduce((active, section) => {
                 const sectionTop = section.getBoundingClientRect().top;
-
-                if (sectionTop <= activationLine) {
-                    return section;
-                }
-
+                if (sectionTop <= activationLine) return section;
                 return active;
             }, sections[0]);
 
@@ -110,32 +121,43 @@ export function Nav() {
             frameId = window.requestAnimationFrame(updateActiveSection);
         };
 
+        // First measurement — runs synchronously, before paint.
         updateActiveSection();
-        document.documentElement.classList.add("brand-motion-ready");
+        root.classList.add("brand-motion-ready");
+
+        // Second measurement on the next animation frame. This is the
+        // key fix for the "both Emily Williamses on first load" bug:
+        // by the next frame, font loading, scroll restoration and any
+        // late layout shifts have settled, so the values we measure
+        // are the final ones. If anything has changed, state catches up
+        // before the user notices.
+        settleId = window.requestAnimationFrame(updateActiveSection);
 
         window.addEventListener("scroll", requestUpdate, { passive: true });
         window.addEventListener("resize", requestUpdate);
 
+        // Re-measure once fonts have loaded — Fraunces ships variable
+        // optical sizing and its actual metrics affect heroFontSize,
+        // which feeds the brand-motion math.
+        if (typeof document !== "undefined" && "fonts" in document) {
+            document.fonts.ready.then(() => {
+                if (root.classList.contains("brand-motion-ready")) {
+                    updateActiveSection();
+                }
+            });
+        }
+
         return () => {
             window.cancelAnimationFrame(frameId);
+            window.cancelAnimationFrame(settleId);
             window.removeEventListener("scroll", requestUpdate);
             window.removeEventListener("resize", requestUpdate);
-            document.documentElement.classList.remove("brand-motion-ready");
-            document.documentElement.style.removeProperty("--brand-progress");
-            document.documentElement.style.removeProperty("--brand-translate-y");
-            document.documentElement.style.removeProperty("--brand-scale");
-            document.documentElement.style.removeProperty("--hero-brand-opacity");
+            root.classList.remove("brand-motion-ready");
+            root.style.removeProperty("--brand-progress");
+            root.style.removeProperty("--brand-translate-y");
+            root.style.removeProperty("--brand-scale");
+            root.style.removeProperty("--hero-brand-opacity");
         };
-    }, [isHome]);
-
-    useEffect(() => {
-        if (isHome) return;
-
-        setIsBrandVisible(true);
-        document.documentElement.style.removeProperty("--brand-progress");
-        document.documentElement.style.removeProperty("--brand-translate-y");
-        document.documentElement.style.removeProperty("--brand-scale");
-        document.documentElement.style.removeProperty("--hero-brand-opacity");
     }, [isHome]);
 
     const hrefFor = (id: string) => {
