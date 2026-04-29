@@ -1,6 +1,6 @@
 import "server-only";
 
-import { head, put, BlobNotFoundError } from "@vercel/blob";
+import { head, put, get, BlobNotFoundError } from "@vercel/blob";
 
 import type { Project } from "@/data/projects";
 
@@ -10,21 +10,29 @@ const BLOB_PATH = "projects.json";
  * Read the projects array from the blob store.
  * Returns null if the blob doesn't exist yet (first run).
  *
- * Uses ETag-based cache busting: every read fetches the public URL with
- * `?v=<etag>` appended so we never get a stale cached copy after a write.
+ * Uses the SDK's get() rather than fetching the public URL because
+ * the store is configured with private access — its URLs aren't
+ * publicly fetchable. get() streams the content via the
+ * BLOB_READ_WRITE_TOKEN and is always fresh (no edge caching).
  */
 export async function readProjectsBlob(): Promise<Project[] | null> {
   try {
-    const meta = await head(BLOB_PATH);
-    const url = `${meta.url}?v=${encodeURIComponent(meta.etag)}`;
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) return null;
-    const data = (await res.json()) as Project[];
-    return Array.isArray(data) ? data : null;
+    // head() throws BlobNotFoundError if the blob doesn't exist yet
+    await head(BLOB_PATH);
   } catch (err) {
     if (err instanceof BlobNotFoundError) return null;
-    // Surface unexpected errors so they show up in logs, but don't break
-    // public pages — they fall back to the static seed.
+    console.error("[blob] head failed:", err);
+    return null;
+  }
+
+  try {
+    const result = await get(BLOB_PATH, { access: "private" });
+    if (!result || !result.stream) return null;
+
+    const text = await new Response(result.stream).text();
+    const data = JSON.parse(text);
+    return Array.isArray(data) ? data : null;
+  } catch (err) {
     console.error("[blob] readProjectsBlob failed:", err);
     return null;
   }
@@ -36,13 +44,9 @@ export async function readProjectsBlob(): Promise<Project[] | null> {
  */
 export async function writeProjectsBlob(projects: Project[]): Promise<void> {
   await put(BLOB_PATH, JSON.stringify(projects, null, 2), {
-    access: "public",
+    access: "private",
     contentType: "application/json",
     addRandomSuffix: false,
     allowOverwrite: true,
-    // Tell the CDN/browser not to cache aggressively. Vercel still has
-    // a ~60s edge cache minimum on the public URL, but we cache-bust
-    // on read with the ETag so this is mostly belt-and-braces.
-    cacheControlMaxAge: 0,
   });
 }
